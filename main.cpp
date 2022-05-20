@@ -1,12 +1,19 @@
 #include "tgaimage.h"
+#include "core/Model.h"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 
+const int WINDOW_WIDTH = 600;
+const int WINDOW_HEIGHT = 600;
+
+Model* model = NULL;
+
+
 //比如(80,200)和(70,100)这段特殊点，有两个特殊性
 //特殊1：x方向上是减小的而不是增大的
 //特殊2：Y幅度更大，应该按照Y轴每步走
-//线框模式
+//线框模式，参数是两个点的屏幕坐标[0,width],color是这条直线的颜色
 void line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color) 
 {
     bool yStep = false;
@@ -22,17 +29,25 @@ void line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color)
     {
         beginPoint = x0 <= x1 ? x0 : x1;//从小到大
         endPoint = x0 <= x1 ? x1 : x0;
-        followBeginPixel = y0 <= y1 ? y0 : y1;
+        followBeginPixel = x0 <= x1 ? y0 : y1;//如果begin是x0，跟随点就选y0.如果begin是x1，跟随点就选y1
         followTotalPixel = abs(y1 - y0);
+        //判断跟随递进边是递增还是递减，c++没有取符号方法，所以用下面的
+        int signCheck = x0 <= x1 ? (y1 - y0) : (y0 - y1);
+        signCheck = signCheck >= 0 ? 1 : -1;
+        followTotalPixel *= signCheck;
     }
     else
     {
         beginPoint = y0 <= y1 ? y0 : y1;
         endPoint = y0 <= y1 ? y1 : y0;
-        followBeginPixel = x0 <= x1 ? x0 : x1;
+        followBeginPixel = y0 <= y1 ? x0 : x1;
         followTotalPixel = abs(x1 - x0);
+        
+        int signCheck = y0 <= y1 ? (x1 - x0) : (x0 - x1);
+        signCheck = signCheck >= 0 ? 1 : -1;
+        followTotalPixel *= signCheck;
     }
-    for (int curPoint = beginPoint; curPoint < endPoint; curPoint++)//beginPoint一定小于endPoint，且curPoint是按照幅度较大的每步走
+    for (int curPoint = beginPoint; curPoint <= endPoint; curPoint++)//beginPoint一定小于endPoint，且curPoint是按照幅度较大的每步走
     {
         float t = (curPoint - beginPoint) / (float)(endPoint - beginPoint);//作者的优化在这里，t几乎是相同的可以拿到循环外面去
         int lesserSideCurPixel = followBeginPixel + t * followTotalPixel;//幅度较小的边目前递进到的位置
@@ -42,12 +57,43 @@ void line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color)
             image.set(lesserSideCurPixel, curPoint, color);
     }
 }
+
+Vec2 TestWorldToScreen(const Vec3& worldPos)
+{
+    int x = (worldPos.x + 1.0) * 0.5 * WINDOW_WIDTH;//[-1,1]->[0,WIDTH]
+    int y = (worldPos.y + 1.0) * 0.5 * WINDOW_HEIGHT;
+    return Vec2(x, y);
+}
+
 int main(int argc, char** argv) {
-    TGAImage image(100, 100, TGAImage::RGB);
-    line(13, 20, 80, 40, image, white);
-    line(20, 13, 40, 80, image, red);
-    line(80, 40, 13, 20, image, red);
+    if (2 == argc) {
+        model = new Model(argv[1]);
+    }
+    else {
+        model = new Model("obj/african_head.obj");
+    }
+
+    TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
+    for (int i = 0; i < model->nfaces(); i++)
+    {
+        Vec3 vertPos[3];//一个面上三个顶点的position
+        Vec2 testScreenCoord[3];
+        for (int j = 0; j < 3; j++)
+        {
+            vertPos[j] = model->GetVertPos(i, j);
+            testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
+        }
+        //线框模式
+        line(testScreenCoord[0].x, testScreenCoord[0].y,
+            testScreenCoord[1].x, testScreenCoord[1].y, image, white);
+        line(testScreenCoord[1].x, testScreenCoord[1].y,
+            testScreenCoord[2].x, testScreenCoord[2].y, image, white);
+        line(testScreenCoord[2].x, testScreenCoord[2].y,
+            testScreenCoord[0].x, testScreenCoord[0].y, image, white);
+    }
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
+
+    delete model;
     return 0;
 }
