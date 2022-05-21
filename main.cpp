@@ -58,32 +58,56 @@ void line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color)
     }
 }
 
-Vec2 TestWorldToScreen(const Vec3& worldPos)
+Vec3 TestWorldToScreen(const Vec3& worldPos)
 {
+    //return Vec3(int((worldPos.x + 1.0) * WINDOW_WIDTH / 2.0 + 0.5), int((worldPos.y + 1.0) * WINDOW_HEIGHT / 2.0 + 0.5), worldPos.z);
+
     int x = (worldPos.x + 1.0) * 0.5 * WINDOW_WIDTH;//[-1,1]->[0,WIDTH]
     int y = (worldPos.y + 1.0) * 0.5 * WINDOW_HEIGHT;
-    return Vec2(x, y);
+    int z = worldPos.z;//[-1,1]
+    return Vec3(x, y, z);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
+    int width = WINDOW_WIDTH, height = WINDOW_HEIGHT;
+    float* zbuffer = (float*)malloc(sizeof(float) * width * height);
+    for (int i = 0; i < width * height; i++)
+        zbuffer[i] = -std::numeric_limits<float>::max();
+
     if (2 == argc) {
         model = new Model(argv[1]);
     }
     else {
         model = new Model("obj/african_head.obj");
+        //model = new Model("obj/test.obj");
     }
 
     TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
     for (int i = 0; i < model->nfaces(); i++)
     {
         Vec3 vertPos[3];//一个面上三个顶点的position
-        Vec2 testScreenCoord[3];
+        Vec3 testScreenCoord[3];
+        Vec3 testWorldPos[3];
+        Vec2 vertUV[3];
         for (int j = 0; j < 3; j++)
         {
             vertPos[j] = model->GetVertPos(i, j);
+            vertUV[j] = model->GetVertUV(i, j);
             testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
+            testWorldPos[j] = vertPos[j];
         }
-        Draw_Triangles(testScreenCoord, image);
+        //Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
+        //float ndotL = normalize(normal) * normalize(Vec3(0, 0, 1));
+        //ndotL = ndotL > 0 ? ndotL : 0;
+        //if (ndotL > 0)
+
+        {
+            //float lambert = ndotL * 255;
+            TGAColor color = TGAColor(255, 255, 255, 255);
+            triangle(testScreenCoord,zbuffer,vertUV,model, image, color);
+        }
+
     }
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
@@ -91,3 +115,47 @@ int main(int argc, char** argv) {
     delete model;
     return 0;
 }
+
+
+
+//Old
+//int main(int argc, char** argv)
+//{
+//    if (2 == argc)
+//    {
+//        model = new Model(argv[1]);
+//    }
+//    else
+//    {
+//        model = new Model("obj/african_head.obj");
+//    }
+//    float width = WINDOW_WIDTH, height = WINDOW_HEIGHT;
+//
+//    float* zbuffer = new float[width * height];
+//    for (int i = width * height; i--; zbuffer[i] = -std::numeric_limits<float>::max());//i减到0就为false了
+//
+//    TGAImage image(width, height, TGAImage::RGB);
+//    Vec3 light_dir(0, 0, 1);
+//    for (int i = 0; i < model->nfaces(); i++)
+//    {
+//        std::vector<int> face = model->face(i);
+//        Vec3 screen_coords[3];
+//        Vec3 world_coords[3];
+//        for (int j = 0; j < 3; j++)
+//        {
+//            screen_coords[j] = TestWorldToScreen(model->vert(face[j]));
+//            world_coords[j] = model->vert(face[j]);
+//        }
+//        //光照
+//        Vec3 normal = Cross((world_coords[2] - world_coords[0]),
+//            (world_coords[1] - world_coords[0]));
+//        normal = normalize(normal);// .normalize();
+//        float intensity = normal * light_dir;
+//        //if (intensity > 0)
+//        triangle(screen_coords, zbuffer, image, TGAColor(intensity * 255, intensity * 255, intensity * 255, 255));
+//    }
+//    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+//    image.write_tga_file("output.tga");
+//    delete model;
+//    return 0;
+//}
