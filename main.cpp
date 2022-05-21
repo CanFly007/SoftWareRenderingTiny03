@@ -1,11 +1,11 @@
 #include "tgaimage.h"
 #include "core/Model.h"
+#include "core/Pipeline.h"
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 
-const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 600;
+
 
 Model* model = NULL;
 
@@ -83,13 +83,7 @@ int main(int argc, char** argv) {
             vertPos[j] = model->GetVertPos(i, j);
             testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
         }
-        //Ïß¿òÄ£Ê½
-        line(testScreenCoord[0].x, testScreenCoord[0].y,
-            testScreenCoord[1].x, testScreenCoord[1].y, image, white);
-        line(testScreenCoord[1].x, testScreenCoord[1].y,
-            testScreenCoord[2].x, testScreenCoord[2].y, image, white);
-        line(testScreenCoord[2].x, testScreenCoord[2].y,
-            testScreenCoord[0].x, testScreenCoord[0].y, image, white);
+        Draw_Triangles(testScreenCoord, image);
     }
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
