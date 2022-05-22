@@ -71,8 +71,9 @@ void triangle(Vec3* pts, float* zbuffer, Vec2* uvArray,Model* model, TGAImage& i
                 Vec2 uv = uvArray[0] * bc_screen.x + 
                     uvArray[1] * bc_screen.y +
                     uvArray[2] * bc_screen.z;
-                TGAColor diffuseColor = model->SamplerDiffseColor(uv);
-                image.set(P.x, P.y, diffuseColor);
+                Vec3 diffuseColor = model->SamplerDiffseColor(uv);
+                TGAColor color = TGAColor(diffuseColor.x * 255, diffuseColor.y * 255, diffuseColor.z * 255, 255);
+                image.set(P.x, P.y, color);
             }
         }
     }

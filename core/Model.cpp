@@ -67,18 +67,21 @@ Model::Model(const char* filename)
 
 void Model::create_map(const char* filename)
 {
+	diffuseMap = NULL;
+
+	diffuseMap = new TGAImage();
 	load_texture(filename, "_diffuse.tga", diffuseMap);
 }
 
-void Model::load_texture(std::string filename, const char* suffix, TGAImage& img)
+void Model::load_texture(std::string filename, const char* suffix, TGAImage* img)
 {
 	std::string texfile(filename);
 	size_t dot = texfile.find_last_of(".");
 	if (dot != std::string::npos)
 	{
 		texfile = texfile.substr(0, dot) + std::string(suffix);//filename去掉后缀.obj + suffix名称
-		std::cerr << "texture file " << texfile << " loading " << (img.read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
-		img.flip_vertically();
+		std::cerr << "texture file " << texfile << " loading " << (img->read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
+		img->flip_vertically();
 	}
 }
 
@@ -107,11 +110,23 @@ Vec2 Model::GetVertUV(int iface, int nthvert)
 	Vec2 uv = uvVector[uvIndex];
 	return uv;
 }
-TGAColor Model::SamplerDiffseColor(Vec2 uv)
+//TGAColor Model::SamplerDiffseColor(Vec2 uv)
+//{
+//	int diffuseMapW = diffuseMap.get_width();
+//	int diffuseMapH = diffuseMap.get_height();
+//	return diffuseMap.get((int)(diffuseMapW * uv.x), (int)(diffuseMapH * uv.y));
+//}
+Vec3 Model::SamplerDiffseColor(Vec2 uv)
 {
-	int diffuseMapW = diffuseMap.get_width();
-	int diffuseMapH = diffuseMap.get_height();
-	return diffuseMap.get((int)(diffuseMapW * uv.x), (int)(diffuseMapH * uv.y));
+	uv.x = fmod(uv.x, 1); uv.y = fmod(uv.y, 1);//求余运算
+	int diffuseMapW = diffuseMap->get_width();
+	int diffuseMapH = diffuseMap->get_height();
+	TGAColor color = diffuseMap->get((int)(diffuseMapW * uv.x), (int)(diffuseMapH * uv.y));//[0,255]
+
+	Vec3 result;
+	for (int i = 0; i < 3; i++)
+		result[2 - i] = (float)color[i] / 255.0;//b, g, r, a顺序
+	return result;//[0.0,1.0]
 }
 
 
@@ -125,104 +140,3 @@ Vec3 Model::vert(int i)
 {
 	return vertVector[i];
 }
-
-
-
-
-//Old
-//#include <iostream>
-//#include <string>
-//#include <fstream>
-//#include <sstream>
-//#include <vector>
-//#include "model.h"
-//
-//Model::Model(const char* filename) :verts_(), faces_()
-//{
-//	std::ifstream in;
-//	in.open(filename, std::ifstream::in);
-//	if (in.fail())return;
-//	std::string line;
-//	while (!in.eof())
-//	{
-//		std::getline(in, line);
-//		std::istringstream iss(line.c_str());
-//		char trash;
-//		if (!line.compare(0, 2, "v "))
-//		{
-//			iss >> trash;
-//			Vec3 v;
-//			for (int i = 0; i < 3; i++)
-//				iss >> v[i];
-//			verts_.push_back(v);
-//		}
-//		else if (!line.compare(0, 3, "vt "))
-//		{
-//			iss >> trash >> trash;
-//			Vec2 uv;
-//			iss >> uv.x;
-//			iss >> uv.y;
-//			//for (int i = 0; i < 2; i++)
-//			//	iss >> uv[i];
-//			uv_.push_back(uv);
-//		}
-//		else if (!line.compare(0, 2, "f "))
-//		{
-//			std::vector<int> f;
-//			int itrash, idx;
-//			iss >> trash;
-//			while (iss >> idx >> trash >> itrash >> trash >> itrash)
-//			{
-//				idx--;
-//				f.push_back(idx);
-//			}
-//			faces_.push_back(f);
-//		}
-//	}
-//	std::cerr << "# v# " << verts_.size() << " f# " << faces_.size() << " vt# " << uv_.size() << std::endl;
-//	load_texture(filename, "_diffuse.tga", diffusemap_);
-//}
-//
-//Model::~Model() {}
-//
-//int Model::nverts()
-//{
-//	return (int)verts_.size();
-//}
-//int Model::nfaces()
-//{
-//	return (int)faces_.size();
-//}
-//std::vector<int> Model::face(int idx)
-//{
-//	return faces_[idx];
-//}
-//Vec3 Model::vert(int i)
-//{
-//	return verts_[i];
-//}
-//
-//void Model::load_texture(std::string filename, const char* suffix, TGAImage& img)
-//{
-//	std::string texfile(filename);
-//	size_t dot = texfile.find_last_of(".");
-//	if (dot != std::string::npos)
-//	{
-//		texfile = texfile.substr(0, dot) + std::string(suffix);
-//		std::cerr << "texture file " << texfile << " loading" << (img.read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
-//		img.flip_vertically();
-//	}
-//}
-//
-//TGAColor Model::diffuse(Vec2 uv)
-//{
-//	return diffusemap_.get(uv.x, uv.y);
-//}
-//
-//Vec2 Model::uv(int iface, int nvert)
-//{
-//	std::vector<int> face = faces_[iface];
-//	int idx = face[nvert];
-//	//int idx = faces_[iface][nvert][1];
-//	return Vec2(uv_[idx].x * diffusemap_.get_width(), uv_[idx].y * diffusemap_.get_height());
-//}
