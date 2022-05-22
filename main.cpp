@@ -60,11 +60,11 @@ void line(int x0, int y0, int x1, int y1, TGAImage& image, TGAColor color)
 
 Vec3 TestWorldToScreen(const Vec3& worldPos)
 {
-    return Vec3(int((worldPos.x + 1.0) * WINDOW_WIDTH / 2.0 + 0.5), int((worldPos.y + 1.0) * WINDOW_HEIGHT / 2.0 + 0.5), worldPos.z);
+    //return Vec3(int((worldPos.x + 1.0) * WINDOW_WIDTH / 2.0 + 0.5), int((worldPos.y + 1.0) * WINDOW_HEIGHT / 2.0 + 0.5), worldPos.z);
 
     int x = (worldPos.x + 1.0) * 0.5 * WINDOW_WIDTH;//[-1,1]->[0,WIDTH]
     int y = (worldPos.y + 1.0) * 0.5 * WINDOW_HEIGHT;
-    int z = worldPos.z;//[-1,1]
+    float z = worldPos.z;//[-1,1]
     return Vec3(x, y, z);
 }
 
