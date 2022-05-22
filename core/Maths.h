@@ -38,6 +38,54 @@ public:
 	};
 };
 
+class Vec4
+{
+public:
+	Vec4();
+	Vec4(float e0, float e1, float e2, float e3);
+	float operator[](int index)const;
+	float& operator[](int index);//float& 看下是否报错，将a[]设置为左值，报错！float是一个立即数不能成为左值
+	Vec4 operator*(const float t)const;
+	Vec4 operator/(const float t)const;
+
+public:
+	union {
+		struct { float x, y, z, w; };
+		float e[4];
+	};
+};
+
+class Mat3
+{
+public:
+	Mat3();
+	Vec3 operator[](int i)const;
+	Vec3& operator[](int i);
+
+	Mat3 transpose() const;
+	//Mat3 inverse() const;
+	//Mat3 inverse_transpose() const;
+	static Mat3 identity();
+
+public:
+	Vec3 rows[3];
+};
+
+class Mat4
+{
+public:
+	Mat4();
+	Vec4& operator[](int i);
+	Vec4 operator[](int i) const;
+
+	Mat4 transpose() const;
+	//Mat4 inverse() const;
+	//Mat4 inverse_transpose() const;
+	static Mat4 identity();
+public:
+	Vec4 rows[4];
+};
+
 //全局函数
 inline float Cross(Vec2 v1, Vec2 v2) { return v1.x * v2.y - v1.y * v2.x; }
 inline Vec3 Cross(Vec3 v1, Vec3 v2)
@@ -51,8 +99,10 @@ inline Vec3 Cross(Vec3 v1, Vec3 v2)
 
 inline Vec3 normalize(const Vec3 v)
 {
-	float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-	return Vec3(v.x / length, v.y / length, v.z / length);
-	//return (v / length);
+	float length = std::sqrt(v * v);
+	return v / length;
+
+	//float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+	//return Vec3(v.x / length, v.y / length, v.z / length);
 }
 #endif // !MATHS_H

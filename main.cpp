@@ -1,6 +1,13 @@
 #include "tgaimage.h"
 #include "core/Model.h"
 #include "core/Pipeline.h"
+#include "core/Camera.h"
+
+using namespace std;
+
+const Vec3 EYE(0, 1, 5);
+const Vec3 UP(0, 1, 1);
+const Vec3 TARGET(0, 0, 0);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
@@ -74,6 +81,8 @@ int main(int argc, char** argv)
     float* zbuffer = (float*)malloc(sizeof(float) * width * height);
     for (int i = 0; i < width * height; i++)
         zbuffer[i] = -std::numeric_limits<float>::max();
+
+    Camera camera(EYE, TARGET, UP, (float)(width) / height);
 
     if (2 == argc) {
         model = new Model(argv[1]);
