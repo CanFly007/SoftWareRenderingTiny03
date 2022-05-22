@@ -6,32 +6,30 @@ static Vec3 Compute_Barycentric2D(Vec3* screenCoordArray,Vec2 P)
     Vec2 B = Vec2(screenCoordArray[1]);
     Vec2 C = Vec2(screenCoordArray[2]);
     float areaABC = Cross(B - A, C - A);
-    float c1 = Cross(C - B, P - B) / areaABC;
-    float c2 = Cross(P - A, C - A) / areaABC;
+    float c1 = Cross(B - P, C - P) / areaABC;
+    float c2 = Cross(C - P, A - P) / areaABC;
     return Vec3(c1, c2, 1 - c1 - c2);
 }
-Vec3 barycentric(Vec3* pts, Vec2 P)
+Vec3 barycentric(Vec2* pts, Vec2 P)
 {
-    //因为三维空间的面积不能用叉积计算，两个Vec3叉积还是Vec3
-    //换用作者给出的
-    //https://github.com/ssloy/tinyrenderer/wiki/Lesson-2:-Triangle-rasterization-and-back-face-culling
-    Vec3 A = pts[0];
-    Vec3 B = pts[1];
-    Vec3 C = pts[2];
+    //不管三角形P1 P2 P3顺序按照顺时针还是逆时针（可画图）
+    //分母三角形面积都可以按照P1P2叉乘P1P3来算
+    //分子三角形也是PP1 PP2 PP3顺序
+    //P1P2 P1P3
+    float triangleArea = 0.5 * Cross((pts[1] - pts[0]) , (pts[2] - pts[0]));
+    //PP2 PP3
+    float uTriangle = 0.5 * Cross((pts[1] - P) , (pts[2] - P));
+    //PP3 PP1
+    float vTriangle = 0.5 * Cross((pts[2] - P) , (pts[0] - P));
+    //PP1 PP2
+    float wTriangle = 0.5 * Cross((pts[0] - P) , (pts[1] - P));
 
-    Vec3 s[2];
-    s[0] = Vec3(C.x - A.x, B.x - A.x, A.x - P.x);
-    s[1] = Vec3(C.y - A.y, B.y - A.y, A.y - P.y);
-    //for (int i = 2; i--; ) 
-    //{
-    //    s[i].x = C[i] - A[i];
-    //    s[i].y = B[i] - A[i];
-    //    s[i].z = A[i] - P[i];
-    //}
-    Vec3 u = Cross(s[0], s[1]);// s[0] ^ s[1];
-    if (std::abs(u.z) > 1e-2) // dont forget that u[2] is integer. If it is zero then triangle ABC is degenerate
-        return Vec3(1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z);//因为u的结果是(u,v,1)
-    return Vec3(-1, 1, 1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
+    float u = uTriangle / triangleArea;
+    float v = vTriangle / triangleArea;
+    float w = wTriangle / triangleArea;
+    if (u < 0 || v < 0 || w < 0)
+        return Vec3(-1, -1, -1);
+    return Vec3(u, v, w);
 }
 
 
@@ -49,12 +47,14 @@ void triangle(Vec3* pts, float* zbuffer, Vec2* uvArray,Model* model, TGAImage& i
         bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
     }
 
+    //Vec2 p2[3] = { Vec2(pts[0].x,pts[0].y),Vec2(pts[1].x,pts[1].y), Vec2(pts[2].x,pts[2].y) };
     Vec3 P;
     for (P.x = bboxmin.x; P.x <= bboxmax.x; P.x++)
     {
         for (P.y = bboxmin.y; P.y <= bboxmax.y; P.y++)
         {
-            Vec3 bc_screen = barycentric(pts, P);//bc_screen是P像素的重心坐标
+            
+            Vec3 bc_screen = Compute_Barycentric2D(pts, P);//bc_screen是P像素的重心坐标
             if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
                 continue;
             P.z = 0;
