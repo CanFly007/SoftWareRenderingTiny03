@@ -25,6 +25,22 @@ Vec4 Vec4::operator/(const float t)const { return Vec4(x / t, y / t, z / t, w / 
 Mat3::Mat3() {}
 Vec3 Mat3::operator[](int i)const { return rows[i]; }//右值，const的
 Vec3& Mat3::operator[](int i) { return rows[i]; }//左值，可赋值的
+Mat3 Mat3::operator/(float t)const
+{
+	Mat3 m;
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			m[i][j] = (*this)[i][j] / t;
+	return m;
+}
+Vec3 Mat3::operator*(Vec3 v3)const
+{
+	Vec3 result;
+	for (int i = 0; i < 3; i++)
+		for (int k = 0; k < 3; k++)
+			result[i] += (*this)[i][k] * v3[k];
+	return result;
+}
 Mat3 Mat3::transpose() const{
 	Mat3 transpose;
 	for (int i = 0; i < 3; i++)
@@ -32,9 +48,46 @@ Mat3 Mat3::transpose() const{
 			transpose[i][j] = (*this)[j][i];
 	return transpose;
 }
-//Mat3 Mat3::inverse() const {
-//
-//}
+//行列式的值，等于任意一行（一列）的各元素乘以它对应的代数余子式乘积之和
+static float Mat3_determinant(const Mat3& m)
+{
+	float a = +m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]);
+	float b = -m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]);
+	float c = +m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+	return a + b + c;
+}
+//伴随矩阵：代数余子式按列排序（即按行排序后再转置一次）
+static Mat3 Mat3_adjoint(const Mat3& m)
+{
+	Mat3 adjoint;
+	float A00 = +(m[1][1] * m[2][2] - m[1][2] * m[2][1]);
+	float A01 = -(m[1][0] * m[2][2] - m[1][2] * m[2][0]);
+	float A02 = +(m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+	float A10 = -(m[0][1] * m[2][2] - m[0][2] * m[2][1]);
+	float A11 = +(m[0][0] * m[2][2] - m[0][2] * m[2][0]);
+	float A12 = -(m[0][0] * m[2][1] - m[0][1] * m[2][0]);
+	float A20 = +(m[0][1] * m[1][2] - m[0][2] * m[1][1]);
+	float A21 = -(m[0][0] * m[1][2] - m[0][2] * m[1][0]);
+	float A22 = +(m[0][0] * m[1][1] - m[0][1] * m[1][0]);
+	adjoint[0][0] = A00;
+	adjoint[0][1] = A01;
+	adjoint[0][2] = A02;
+	adjoint[1][0] = A10;
+	adjoint[1][1] = A11;
+	adjoint[1][2] = A12;
+	adjoint[2][0] = A20;
+	adjoint[2][1] = A21;
+	adjoint[2][2] = A22;
+	adjoint = adjoint.transpose();//按列排序才是伴随矩阵，所以转置一下	return adjoint;
+	return adjoint;
+}
+//逆矩阵：伴随矩阵除以矩阵行列式的值
+Mat3 Mat3::inverse() const {
+	float determinant = Mat3_determinant(*this);
+	Mat3 adjoint = Mat3_adjoint(*this);
+	Mat3 inverse = adjoint / determinant;
+	return inverse;
+}
 //Mat3 Mat3::inverse_transpose() const;
 Mat3 Mat3::identity() {
 	Mat3 mat;
@@ -47,7 +100,28 @@ Mat3 Mat3::identity() {
 Mat4::Mat4() {}
 Vec4& Mat4::operator[](int i) { return rows[i]; }
 Vec4 Mat4::operator[](int i) const { return rows[i]; }
-
+Mat4 Mat4::operator/(float t) const {
+	Mat4 m;
+	for (int i = 0; i < 4; i++)
+		m[i] = rows[i] / t;
+	return m;
+}
+Mat4 Mat4::operator*(const Mat4 B) const {
+	Mat4 m;
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			for (int k = 0; k < 4; k++)
+				m[i][j] += (*this)[i][k] * B[k][j];
+	return m;
+}
+Vec4 Mat4::operator*(const Vec4 V) const
+{
+	Vec4 result;
+	for (int i = 0; i < 4; i++)
+		for (int k = 0; k < 4; k++)
+			result[i] += (*this)[i][k] * V[k];
+	return result;
+}
 Mat4 Mat4::transpose() const {
 	Mat4 mat;
 	for (int i = 0; i < 4; ++i)
@@ -55,7 +129,50 @@ Mat4 Mat4::transpose() const {
 			mat[i][j] = (*this)[j][i];
 	return mat;
 }
-//Mat4 inverse() const;
+//返回r行c列上代数余子式的值
+//代数余子式：去除第r行和第c列，余下的3x3所构成的行列式称为余子式，前面乘以正负号即是代数余子式
+static float Mat4_algebraicComplement(const Mat4& m4, int r, int c)
+{
+	Mat3 complement;//余子式形式的矩阵
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			int row = i < r ? i : i + 1;
+			int col = j < c ? j : j + 1;
+			complement[i][j] = m4[row][col];
+		}
+	}
+	float determinant = Mat3_determinant(complement);//余子式的值
+	int sign = (r + c) % 2 == 0 ? 1 : -1;
+	return sign * determinant;
+}
+//行列式的值：任意一行（或一列）各个元素乘以它对应的代数余子式乘积之和
+static float Mat4_determinant(const Mat4& m)
+{
+	float determinant = 0;
+	for (int j = 0; j < 4; j++)//按第0行各个元素乘积之和
+		determinant += m[0][j] * Mat4_algebraicComplement(m, 0, j);
+	return determinant;
+}
+//伴随矩阵：代数余子式按列排序（即按行排序后再转置一次）
+static Mat4 Mat4_adjoint(const Mat4& m)
+{
+	Mat4 adjoint;
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			adjoint[i][j] = Mat4_algebraicComplement(m, i, j);
+	adjoint = adjoint.transpose();
+	return adjoint;
+}
+//逆矩阵：伴随矩阵除以矩阵行列式的值
+Mat4 Mat4::inverse() const {
+	Mat4 inverse;
+	Mat4 adjoint = Mat4_adjoint(*this);
+	float determinant = Mat4_determinant(*this);
+	inverse = adjoint / determinant;
+	return inverse;
+}
 //Mat4 inverse_transpose() const;
 Mat4 Mat4::identity() {
 	Mat4 mat;

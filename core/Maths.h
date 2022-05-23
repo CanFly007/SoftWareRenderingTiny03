@@ -61,9 +61,10 @@ public:
 	Mat3();
 	Vec3 operator[](int i)const;
 	Vec3& operator[](int i);
-
+	Mat3 operator/(float t)const;
+	Vec3 operator*(Vec3 v3)const;
 	Mat3 transpose() const;
-	//Mat3 inverse() const;
+	Mat3 inverse() const;
 	//Mat3 inverse_transpose() const;
 	static Mat3 identity();
 
@@ -77,9 +78,12 @@ public:
 	Mat4();
 	Vec4& operator[](int i);
 	Vec4 operator[](int i) const;
+	Mat4 operator/(float t) const;
+	Mat4 operator*(const Mat4 B) const;
+	Vec4 operator*(const Vec4 V) const;
 
 	Mat4 transpose() const;
-	//Mat4 inverse() const;
+	Mat4 inverse() const;
 	//Mat4 inverse_transpose() const;
 	static Mat4 identity();
 public:
