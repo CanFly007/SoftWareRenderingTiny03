@@ -5,8 +5,8 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 1, 5);
-const Vec3 UP(0, 1, 1);
+const Vec3 EYE(0, 5, 5);
+const Vec3 UP(0, 1, 0);
 const Vec3 TARGET(0, 0, 0);
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -74,15 +74,37 @@ Vec3 TestWorldToScreen(const Vec3& worldPos)
     float z = worldPos.z;//[-1,1]
     return Vec3(x, y, z);
 }
+//视口变换，[-1,1]变到屏幕的[0,width],z不变，还是[-1,1]
+Mat4 viewport()
+{
+    //return Vec3f((worldPos.x + 1.0) * 0.5 * width, (worldPos.y + 1.0) * 0.5 * height, worldPos.z);
+    Mat4 m = Mat4::identity();
+    m[0][0] = WINDOW_WIDTH / 2.0;
+    m[0][3] = WINDOW_WIDTH / 2.0;
+    m[1][1] = WINDOW_HEIGHT / 2.0;
+    m[1][3] = WINDOW_HEIGHT / 2.0;
+    return m;
+}
 
 int main(int argc, char** argv) 
 {
     int width = WINDOW_WIDTH, height = WINDOW_HEIGHT;
     float* zbuffer = (float*)malloc(sizeof(float) * width * height);
     for (int i = 0; i < width * height; i++)
-        zbuffer[i] = -std::numeric_limits<float>::max();
+        zbuffer[i] = std::numeric_limits<float>::max();
 
+    //正交相机
+    float cameraWidth = 3.0;
+    float cameraHeight = 3.0;
+    float cameraFarPlane = 100.0;
+    float cameraNearPlane = 1.0;
     Camera camera(EYE, TARGET, UP, (float)(width) / height);
+    Mat4 model_mat = Mat4::identity();
+    Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
+    Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
+
+    Mat4 MVP = perspective_mat * view_mat * model_mat;
+    Mat4 viewPort_mat = viewport();
 
     if (2 == argc) {
         model = new Model(argv[1]);
@@ -99,13 +121,24 @@ int main(int argc, char** argv)
         Vec3 testScreenCoord[3];
         Vec3 testWorldPos[3];
         Vec2 vertUV[3];
+        Vec4 orthoSpacePos[3];
+        Vec4 divisionPos[3];
+        Vec4 viewPortPos[3];
         for (int j = 0; j < 3; j++)
         {
             vertPos[j] = model->GetVertPos(i, j);
             vertUV[j] = model->GetVertUV(i, j);
             testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
             testWorldPos[j] = vertPos[j];
+
+            orthoSpacePos[j] = MVP * Vec4(vertPos[j], 1.0);
+            divisionPos[j] = Vec4(orthoSpacePos[j].x / orthoSpacePos[j].w, 
+                orthoSpacePos[j].y / orthoSpacePos[j].w, orthoSpacePos[j].z / orthoSpacePos[j].w, orthoSpacePos[j].w);
+            viewPortPos[j] = viewPort_mat * divisionPos[j];
+            //testScreenCoord[j] = Vec3(viewPortPos[j].x, viewPortPos[j].y, viewPortPos[j].z);
+            testScreenCoord[j] = Convert_ToVec3(viewPortPos[j]);
         }
+        
         Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
         float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
         ndotL = ndotL > 0 ? ndotL : 0;
@@ -114,6 +147,7 @@ int main(int argc, char** argv)
         {
             float lambert = ndotL * 255;
             TGAColor color = TGAColor(lambert, lambert, lambert, 255);
+            //TGAColor color = TGAColor(255, 255, 0, 255);
             Draw_Triangles(testScreenCoord, zbuffer, image, color);
             //triangle(testScreenCoord,zbuffer,vertUV,model, image, color);
         }

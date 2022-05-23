@@ -104,7 +104,7 @@ void Draw_Triangles(Vec3* screenCoordArray,float* zBuffer,TGAImage& image,TGACol
 
             int index = i * WINDOW_WIDTH + j;
             float z = barCoord[0] * screenCoordArray[0].z + barCoord[1] * screenCoordArray[1].z + barCoord[2] * screenCoordArray[2].z;
-            if (z > zBuffer[index])
+            if (z < zBuffer[index])
             {
                 zBuffer[index] = z;
                 image.set(i, j, color);

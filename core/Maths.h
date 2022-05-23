@@ -10,6 +10,7 @@ public:
 	Vec3();
 	Vec3(float e0, float e1, float e2);
 	float& operator[](int index);
+	Vec3 operator-()const;
 	Vec3 operator-(const Vec3& v)const; //减法
 	Vec3 operator/(const float t)const; //除法
 	float operator*(const Vec3& v)const;//点积
@@ -43,6 +44,7 @@ class Vec4
 public:
 	Vec4();
 	Vec4(float e0, float e1, float e2, float e3);
+	Vec4(Vec3 v3, float alpha);
 	float operator[](int index)const;
 	float& operator[](int index);//float& 看下是否报错，将a[]设置为左值，报错！float是一个立即数不能成为左值
 	Vec4 operator*(const float t)const;
@@ -99,8 +101,6 @@ inline Vec3 Cross(Vec3 v1, Vec3 v2)
 				v1[0] * v2[1] - v1[1] * v2[0]);
 }
 
-
-
 inline Vec3 normalize(const Vec3 v)
 {
 	float length = std::sqrt(v * v);
@@ -109,4 +109,9 @@ inline Vec3 normalize(const Vec3 v)
 	//float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 	//return Vec3(v.x / length, v.y / length, v.z / length);
 }
+
+Vec3 Convert_ToVec3(const Vec4& v4);
+
+Mat4 WorldToViewMat(Vec3 cameraPos, Vec3 lookAtPos, Vec3 upDir);
+Mat4 OrthoProjection(float cameraWidth, float cameraHeight, float near, float far);
 #endif // !MATHS_H

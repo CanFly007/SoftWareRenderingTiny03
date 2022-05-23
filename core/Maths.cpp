@@ -11,12 +11,14 @@ Vec2 Vec2::operator*(const float t)const { return Vec2(x * t, y * t); }
 Vec3::Vec3() : e{ 0,0,0 } {}
 Vec3::Vec3(float e0, float e1, float e2) : e{ e0,e1,e2 } {}
 float& Vec3::operator[](int index) { return e[index]; }
+Vec3 Vec3::operator-()const { return Vec3(-x, -y, -z); }
 Vec3 Vec3::operator-(const Vec3& v)const { return Vec3(x - v.x, y - v.y, z - v.z); }
 Vec3 Vec3::operator/(const float t)const { return Vec3(x / t, y / t, z / t); }
 float Vec3::operator*(const Vec3& v)const { return x * v.x + y * v.y + z * v.z; }
 
 Vec4::Vec4() :e{ 0,0,0,0 } {}
 Vec4::Vec4(float e0, float e1, float e2, float e3) : e{ e0,e1,e2,e3 } {}
+Vec4::Vec4(Vec3 v3, float alpha) : e{ v3.x,v3.y,v3.z,alpha } {}
 float Vec4::operator[](int index)const { return e[index]; }
 float& Vec4::operator[](int index) { return e[index]; }
 Vec4 Vec4::operator*(const float t)const { return Vec4(x * t, y * t, z * t, w * t); }
@@ -182,6 +184,10 @@ Mat4 Mat4::identity() {
 	return mat;
 }
 
+Vec3 Convert_ToVec3(const Vec4& v4)
+{
+	return Vec3(v4.x, v4.y, v4.z);
+}
 
 
 std::ostream& operator<<(std::ostream& out, const Vec2& v)
@@ -203,4 +209,32 @@ std::ostream& operator<<(std::ostream& out, const Mat3& m)
 std::ostream& operator<<(std::ostream& out, const Mat4& m)
 {
 	return out << m[0] << "\n" << m[1] << "\n" << m[2] << "\n" << m[3];
+}
+
+Mat4 WorldToViewMat(Vec3 cameraPos, Vec3 lookAtPos, Vec3 upDir)
+{
+	Vec3 z = normalize(cameraPos - lookAtPos);
+	Vec3 x = normalize(Cross(upDir, z));
+	Vec3 y = normalize(Cross(z, x));
+	Mat4 viewMat = Mat4::identity();
+	for (int j = 0; j < 3; j++)
+	{
+		viewMat[0][j] = x[j];//按行排列
+		viewMat[1][j] = y[j];
+		viewMat[2][j] = z[j];
+	}
+	//先反向平移(-cameraPos放到第四列)，再旋转，所以第四列是：上面矩阵每一行和第四列点积
+	viewMat[0][3] = x * (-cameraPos);
+	viewMat[1][3] = y * (-cameraPos);
+	viewMat[2][3] = z * (-cameraPos);
+	return viewMat;
+}
+Mat4 OrthoProjection(float cameraWidth, float cameraHeight, float near, float far)
+{
+	Mat4 ortho = Mat4::identity();
+	ortho[0][0] = 2.0 / cameraWidth;
+	ortho[1][1] = 2.0 / cameraHeight;
+	ortho[2][2] = 2.0 / (near - far);//负数，右手转左手
+	ortho[2][3] = (near + far) / (near - far);//z方向平移到原点
+	return ortho;
 }
