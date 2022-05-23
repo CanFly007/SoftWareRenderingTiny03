@@ -2,6 +2,7 @@
 #include "core/Model.h"
 #include "core/Pipeline.h"
 #include "core/Camera.h"
+#include "platform/win32.h"
 
 using namespace std;
 
@@ -86,13 +87,17 @@ Mat4 viewport()
     return m;
 }
 
-int main(int argc, char** argv) 
+void ClearZbuffer(int widht, int height, float* zbuffer);
+
+int main() 
 {
     int width = WINDOW_WIDTH, height = WINDOW_HEIGHT;
     float* zbuffer = (float*)malloc(sizeof(float) * width * height);
     for (int i = 0; i < width * height; i++)
-        zbuffer[i] = std::numeric_limits<float>::max();
+        zbuffer[i] = 9999.99;//std::numeric_limits<float>::max();
 
+    window_init(WINDOW_WIDTH, WINDOW_HEIGHT, L"SRender");
+    return 1;
     //正交相机
     float cameraWidth = 3.0;
     float cameraHeight = 3.0;
@@ -106,13 +111,13 @@ int main(int argc, char** argv)
     Mat4 MVP = perspective_mat * view_mat * model_mat;
     Mat4 viewPort_mat = viewport();
 
-    if (2 == argc) {
-        model = new Model(argv[1]);
-    }
-    else {
+    //if (2 == argc) {
+    //    model = new Model(argv[1]);
+    //}
+    //else {
         model = new Model("obj/african_head.obj");
         //model = new Model("obj/test.obj");
-    }
+    //}
 
     TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
     for (int i = 0; i < model->nfaces(); i++)
@@ -158,4 +163,10 @@ int main(int argc, char** argv)
 
     delete model;
     return 0;
+}
+
+void ClearZbuffer(int widht, int height, float* zbuffer)
+{
+    for (int i = 0; i < width * height; i++)
+        zbuffer[i] = 9999.99;//std::numeric_limits<float>::max();
 }
