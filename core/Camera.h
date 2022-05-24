@@ -13,4 +13,6 @@ public:
 	Vec3 up;
 	float aspect;
 };
+
+void handle_events(Camera& camera);
 #endif // !CAMERA_H

@@ -79,9 +79,18 @@ void triangle(Vec3* pts, float* zbuffer, Vec2* uvArray,Model* model, TGAImage& i
     }
 }
 
-
-void Draw_Triangles(Vec3* screenCoordArray,float* zBuffer,TGAImage& image,TGAColor color)
+static void set_color(unsigned char* framebuffer, int x, int y, unsigned char color[])
 {
+    int i;
+    int index = ((WINDOW_HEIGHT - y - 1) * WINDOW_WIDTH + x) * 4; // the origin for pixel is bottom-left, but the framebuffer index counts from top-left
+
+    for (i = 0; i < 3; i++)
+        framebuffer[index + i] = color[i];
+}
+void Draw_Triangles(Vec3* screenCoordArray, unsigned char* framebuffer,float* zBuffer,TGAColor color)
+{
+    unsigned char c[3];
+
     Vec2 boxMin = Vec2(WINDOW_WIDTH, WINDOW_HEIGHT);
     Vec2 boxMax = Vec2(0, 0);
     for (int i = 0; i < 3; i++)
@@ -107,7 +116,13 @@ void Draw_Triangles(Vec3* screenCoordArray,float* zBuffer,TGAImage& image,TGACol
             if (z < zBuffer[index])
             {
                 zBuffer[index] = z;
-                image.set(i, j, color);
+                for (int i = 0; i < 3; i++)
+                {
+                    c[i] = (int)color[i];//[0,255]
+                }
+                //Vec3 c = Vec3(color[0], color[1], color[2]);
+                set_color(framebuffer, i, j, c);
+                //image.set(i, j, color);
             }
             //image.set(i, j, TGAColor(barCoord.x *255, barCoord.y*255, barCoord.z*255, 255));
         }
