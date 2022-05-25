@@ -89,6 +89,13 @@ Mat4 viewport()
 
 void ClearFramebuffer(int width, int height, unsigned char* framebuffer);
 void ClearZbuffer(int width, int height, float* zbuffer);
+void update_matrix(Camera camera , Mat4& mvp, Mat4& viewPort);
+
+//正交相机
+float cameraWidth = 3.0;
+float cameraHeight = 3.0;
+float cameraFarPlane = 100.0;
+float cameraNearPlane = 1.0;
 
 int main() 
 {
@@ -97,11 +104,6 @@ int main()
     unsigned char* framebuffer = (unsigned char*)malloc(sizeof(unsigned char) * width * height * 4);
     memset(framebuffer, 0, sizeof(unsigned char) * width * height * 4);//全设置为0
 
-    //正交相机
-    float cameraWidth = 3.0;
-    float cameraHeight = 3.0;
-    float cameraFarPlane = 100.0;
-    float cameraNearPlane = 1.0;
     Camera camera(EYE, TARGET, UP, (float)(width) / height);
     //转换矩阵
     Mat4 model_mat = Mat4::identity();
@@ -134,7 +136,7 @@ int main()
 
         // handle events and update view, perspective matrix
         handle_events(camera);
-        //update_matrix(camera, view_mat, perspective_mat, shader_model, shader_skybox);
+        update_matrix(camera, MVP, viewPort_mat);
 
         //Draw Models
         //TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
@@ -201,4 +203,14 @@ void ClearFramebuffer(int width, int height, unsigned char* framebuffer)
             framebuffer[index] = 56;
         }
     }
+}
+void update_matrix(Camera camera, Mat4& mvp, Mat4& viewPort)
+{
+    //Camera camera(EYE, TARGET, UP, (float)(width) / height);
+    //转换矩阵
+    Mat4 model_mat = Mat4::identity();
+    Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
+    Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
+    mvp = perspective_mat * view_mat * model_mat;
+    viewPort = viewport();
 }

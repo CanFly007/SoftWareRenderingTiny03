@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "./macro.h"
+
 class Vec3
 {
 public:
@@ -12,8 +14,11 @@ public:
 	float& operator[](int index);
 	Vec3 operator-()const;
 	Vec3 operator-(const Vec3& v)const; //减法
+	Vec3& operator+=(const Vec3& v);
+	Vec3 operator*(const float t)const;
 	Vec3 operator/(const float t)const; //除法
 	float operator*(const Vec3& v)const;//点积
+	float length()const;
 public:
 	union {//调用构造函数会初始化成{0,0,0}
 		struct { float x, y, z; };
@@ -111,6 +116,7 @@ inline Vec3 normalize(const Vec3 v)
 }
 
 Vec3 Convert_ToVec3(const Vec4& v4);
+Vec3 operator*(float t, const Vec3& v);
 
 Mat4 WorldToViewMat(Vec3 cameraPos, Vec3 lookAtPos, Vec3 upDir);
 Mat4 OrthoProjection(float cameraWidth, float cameraHeight, float near, float far);

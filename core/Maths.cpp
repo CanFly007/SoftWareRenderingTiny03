@@ -12,9 +12,12 @@ Vec3::Vec3() : e{ 0,0,0 } {}
 Vec3::Vec3(float e0, float e1, float e2) : e{ e0,e1,e2 } {}
 float& Vec3::operator[](int index) { return e[index]; }
 Vec3 Vec3::operator-()const { return Vec3(-x, -y, -z); }
+Vec3& Vec3::operator+=(const Vec3& v) { x += v.x; y += v.y; z += v.z; return *this; }
 Vec3 Vec3::operator-(const Vec3& v)const { return Vec3(x - v.x, y - v.y, z - v.z); }
+Vec3 Vec3::operator*(const float t)const { return Vec3(x * t, y * t, z * t); }
 Vec3 Vec3::operator/(const float t)const { return Vec3(x / t, y / t, z / t); }
 float Vec3::operator*(const Vec3& v)const { return x * v.x + y * v.y + z * v.z; }
+float Vec3::length()const { return sqrt(x * x + y * y + z * z); }
 
 Vec4::Vec4() :e{ 0,0,0,0 } {}
 Vec4::Vec4(float e0, float e1, float e2, float e3) : e{ e0,e1,e2,e3 } {}
@@ -187,6 +190,10 @@ Mat4 Mat4::identity() {
 Vec3 Convert_ToVec3(const Vec4& v4)
 {
 	return Vec3(v4.x, v4.y, v4.z);
+}
+Vec3 operator*(float t, const Vec3& v)
+{
+	return Vec3(t * v.x, t * v.y, t * v.z);
 }
 
 

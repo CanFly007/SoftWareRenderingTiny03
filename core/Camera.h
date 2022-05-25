@@ -12,7 +12,12 @@ public:
 	Vec3 target;
 	Vec3 up;
 	float aspect;
+	Vec3 x;
+	Vec3 y;
+	Vec3 z;
 };
 
+//handle event
+void updata_camera_pos(Camera& camera);
 void handle_events(Camera& camera);
 #endif // !CAMERA_H
