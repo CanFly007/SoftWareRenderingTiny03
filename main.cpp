@@ -3,6 +3,7 @@
 #include "core/Pipeline.h"
 #include "core/Camera.h"
 #include "platform/win32.h"
+#include "shader/Shader.h"
 
 using namespace std;
 
@@ -89,7 +90,7 @@ Mat4 viewport()
 
 void ClearFramebuffer(int width, int height, unsigned char* framebuffer);
 void ClearZbuffer(int width, int height, float* zbuffer);
-void update_matrix(Camera camera , Mat4& mvp, Mat4& viewPort);
+void update_matrix(Camera camera, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/);
 
 //正交相机
 float cameraWidth = 3.0;
@@ -122,6 +123,11 @@ int main()
     Vec4 divisionPos[3];
     Vec4 viewPortPos[3];
 
+    //构建场景
+    IShader* shader_model = new PhongShader();
+    shader_model->payload.model = model;
+    shader_model->payload.mvp_mat4 = MVP;
+
     window_init(WINDOW_WIDTH, WINDOW_HEIGHT, L"SRender");
 
     //render loop
@@ -136,32 +142,34 @@ int main()
 
         // handle events and update view, perspective matrix
         handle_events(camera);
-        update_matrix(camera, MVP, viewPort_mat);
+        update_matrix(camera, shader_model);
 
         //Draw Models
         //TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
+        //Shader* shader;//只是选择使用skybox还是shader_model shader
         for (int i = 0; i < model->nfaces(); i++)
         {
-            for (int j = 0; j < 3; j++)
-            {
-                vertPos[j] = model->GetVertPos(i, j);
-                vertUV[j] = model->GetVertUV(i, j);
-                testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
-                testWorldPos[j] = vertPos[j];
+            Draw_Triangles(framebuffer, zbuffer, *shader_model, i);
+            //for (int j = 0; j < 3; j++)
+            //{
+            //    vertPos[j] = model->GetVertPos(i, j);
+            //    vertUV[j] = model->GetVertUV(i, j);
+            //    testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
+            //    testWorldPos[j] = vertPos[j];
 
-                orthoSpacePos[j] = MVP * Vec4(vertPos[j], 1.0);
-                divisionPos[j] = Vec4(orthoSpacePos[j].x / orthoSpacePos[j].w,
-                    orthoSpacePos[j].y / orthoSpacePos[j].w, orthoSpacePos[j].z / orthoSpacePos[j].w, orthoSpacePos[j].w);
-                viewPortPos[j] = viewPort_mat * divisionPos[j];
-                testScreenCoord[j] = Convert_ToVec3(viewPortPos[j]);
-            }
+            //    orthoSpacePos[j] = MVP * Vec4(vertPos[j], 1.0);
+            //    divisionPos[j] = Vec4(orthoSpacePos[j].x / orthoSpacePos[j].w,
+            //        orthoSpacePos[j].y / orthoSpacePos[j].w, orthoSpacePos[j].z / orthoSpacePos[j].w, orthoSpacePos[j].w);
+            //    viewPortPos[j] = viewPort_mat * divisionPos[j];
+            //    testScreenCoord[j] = Convert_ToVec3(viewPortPos[j]);
+            //}
 
-            Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
-            float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
-            ndotL = ndotL > 0 ? ndotL : 0;
-            float lambert = ndotL * 255;
-            TGAColor color = TGAColor(lambert, lambert, lambert, 255);
-            Draw_Triangles(testScreenCoord, framebuffer, zbuffer, color);
+            //Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
+            //float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
+            //ndotL = ndotL > 0 ? ndotL : 0;
+            //float lambert = ndotL * 255;
+            //TGAColor color = TGAColor(lambert, lambert, lambert, 255);
+            //Draw_Triangles(testScreenCoord, framebuffer, zbuffer, color);
         }        
         //显示FPS
         num_frames += 1;
@@ -204,13 +212,14 @@ void ClearFramebuffer(int width, int height, unsigned char* framebuffer)
         }
     }
 }
-void update_matrix(Camera camera, Mat4& mvp, Mat4& viewPort)
+void update_matrix(Camera camera,IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/)
 {
     //Camera camera(EYE, TARGET, UP, (float)(width) / height);
-    //转换矩阵
+    //因为键盘鼠标事件导致摄像机位置变动，需要重新转换矩阵
     Mat4 model_mat = Mat4::identity();
     Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
     Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
-    mvp = perspective_mat * view_mat * model_mat;
-    viewPort = viewport();
+    Mat4 mvp = perspective_mat * view_mat * model_mat;
+    shader_model->payload.mvp_mat4 = mvp;
+    //viewPort = viewport();
 }
