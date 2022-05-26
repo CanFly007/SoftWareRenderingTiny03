@@ -126,7 +126,7 @@ int main()
     //¹¹½¨³¡¾°
     IShader* shader_model = new PhongShader();
     shader_model->payload.model = model;
-    shader_model->payload.mvp_mat4 = MVP;
+    shader_model->payload.MVP_uniform = MVP;
 
     window_init(WINDOW_WIDTH, WINDOW_HEIGHT, L"SRender");
 
@@ -220,6 +220,6 @@ void update_matrix(Camera camera,IShader* shader_model/*, Mat4& mvp, Mat4& viewP
     Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
     Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
     Mat4 mvp = perspective_mat * view_mat * model_mat;
-    shader_model->payload.mvp_mat4 = mvp;
+    shader_model->payload.MVP_uniform = mvp;
     //viewPort = viewport();
 }

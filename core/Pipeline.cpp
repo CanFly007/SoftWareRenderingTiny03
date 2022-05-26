@@ -195,5 +195,5 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
     {
         shader.vertex_shader(nface, j);
     }
-    Rasterize_singlethread(shader.payload.orthoSpace_Pos, framebuffer, zBuffer, shader);
+    Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
 }

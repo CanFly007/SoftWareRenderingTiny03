@@ -4,13 +4,17 @@
 #include "../core/Maths.h"
 #include "../core/Model.h"
 
-typedef struct
+typedef struct //attribute顶点属性，uniform顶点片元都能用cpu传进来的，varying顶点到片元
 {
+	//Attribute:
 	Model* model;//.obj文件
-	Mat4 mvp_mat4;
+	Vec2 uv_attribute[3];//三个顶点的uv坐标
 
-	Vec2 uv_attri[3];//三个顶点的uv坐标
-	Vec4 orthoSpace_Pos[3];//三个顶点经过MVP变换后在裁剪空间的坐标
+	//uniform:
+	Mat4 MVP_uniform;
+
+	//varying:
+	Vec4 clipSpacePos_varying[3];//三个顶点经过MVP变换后在裁剪空间的坐标
 	
 }payload_t;//理解成a2v和v2f的并集合
 
