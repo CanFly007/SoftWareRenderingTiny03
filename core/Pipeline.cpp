@@ -129,15 +129,15 @@ void Draw_Triangles(Vec3* screenCoordArray, unsigned char* framebuffer,float* zB
     }
 }
 
-void Rasterize_singlethread(Vec4* clipcoord_attri, unsigned char* framebuffer, float* zBuffer, IShader& shader)
+void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuffer, float* zBuffer, IShader& shader)
 {
     //透视除法
     Vec3 ndcPosArray[3];//数组中每个元素代表一个ndc位置
     for (int i = 0; i < 3; i++)
     {
-        ndcPosArray[i].x = clipcoord_attri[i].x / clipcoord_attri[i].w;
-        ndcPosArray[i].y = clipcoord_attri[i].y / clipcoord_attri[i].w;
-        ndcPosArray[i].z = clipcoord_attri[i].z / clipcoord_attri[i].w;
+        ndcPosArray[i].x = clipSpacePos_varying[i].x / clipSpacePos_varying[i].w;
+        ndcPosArray[i].y = clipSpacePos_varying[i].y / clipSpacePos_varying[i].w;
+        ndcPosArray[i].z = clipSpacePos_varying[i].z / clipSpacePos_varying[i].w;
     }
     //NDC -> 视口转换
     //return Vec3f((worldPos.x + 1.0) * 0.5 * width, (worldPos.y + 1.0) * 0.5 * height, worldPos.z);
@@ -150,7 +150,7 @@ void Rasterize_singlethread(Vec4* clipcoord_attri, unsigned char* framebuffer, f
         screenSpacePosArray[i].y = (ndcPosArray[i].y + 1.0) * 0.5 * height;
         screenSpacePosArray[i].z = ndcPosArray[i].z;
     }
-
+    //通过重心坐标法，找到AABB矩形中要渲染的像素
     unsigned char c[3];
     Vec2 boxMin = Vec2(WINDOW_WIDTH, WINDOW_HEIGHT);
     Vec2 boxMax = Vec2(0, 0);
@@ -174,13 +174,15 @@ void Rasterize_singlethread(Vec4* clipcoord_attri, unsigned char* framebuffer, f
 
             int index = i * WINDOW_WIDTH + j;
             float z = barCoord[0] * screenSpacePosArray[0].z + barCoord[1] * screenSpacePosArray[1].z + barCoord[2] * screenSpacePosArray[2].z;
+            //深度测试
             if (z < zBuffer[index])
             {
-                zBuffer[index] = z;
+                zBuffer[index] = z;//深度写入
+                Vec3 color = shader.fragment_shader(barCoord[0], barCoord[1], barCoord[2]);//输出[0,255]
                 for (int i = 0; i < 3; i++)
                 {
                     //c[i] = (int)color[i];//[0,255]
-                    c[i] = 200;
+                    c[i] = color[i];//Vec3 -> unsigned char c[3];
                 }
                 //Vec3 c = Vec3(color[0], color[1], color[2]);
                 set_color(framebuffer, i, j, c);
@@ -195,5 +197,14 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
     {
         shader.vertex_shader(nface, j);
     }
+    //测试fragment是否正常工作，所以在这里虚拟算下normal
+    Vec3 testWorldPos[3] = { shader.payload.worldSpacePos_varying[0],shader.payload.worldSpacePos_varying[1],
+        shader.payload.worldSpacePos_varying[2] };
+    Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
+    float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
+    ndotL = ndotL > 0 ? ndotL : 0;
+    float lambert = ndotL * 255;
+    shader.payload.lambertTest_varying = lambert;
+
     Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
 }

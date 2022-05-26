@@ -14,6 +14,7 @@ public:
 	float& operator[](int index);
 	Vec3 operator-()const;
 	Vec3 operator-(const Vec3& v)const; //¼õ·¨
+	Vec3 operator+(const Vec3& v)const;
 	Vec3& operator+=(const Vec3& v);
 	Vec3 operator*(const float t)const;
 	Vec3 operator/(const float t)const; //³ý·¨
