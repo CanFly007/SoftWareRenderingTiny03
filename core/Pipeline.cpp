@@ -178,6 +178,7 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
             if (z < zBuffer[index])
             {
                 zBuffer[index] = z;//深度写入
+                //执行片元着色器
                 Vec3 color = shader.fragment_shader(barCoord[0], barCoord[1], barCoord[2]);//输出[0,255]
                 for (int i = 0; i < 3; i++)
                 {
@@ -197,14 +198,15 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
     {
         shader.vertex_shader(nface, j);
     }
-    //测试fragment是否正常工作，所以在这里虚拟算下normal
+    //测试fragment是否正常工作，所以在这里虚拟算下faceNormal
     Vec3 testWorldPos[3] = { shader.payload.worldSpacePos_varying[0],shader.payload.worldSpacePos_varying[1],
         shader.payload.worldSpacePos_varying[2] };
-    Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
-    float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
+    Vec3 faceNormal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
+    float ndotL = normalize(faceNormal) * normalize(Vec3(0, 0, -1));
     ndotL = ndotL > 0 ? ndotL : 0;
     float lambert = ndotL * 255;
     shader.payload.lambertTest_varying = lambert;
+    shader.payload.testFaceNormal_varying = normalize(faceNormal);
 
     Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
 }

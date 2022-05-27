@@ -17,6 +17,7 @@ typedef struct //attribute¶¥µãÊôĞÔ£¬uniform¶¥µãÆ¬Ôª¶¼ÄÜÓÃcpu´«½øÀ´µÄ£¬varying¶¥µ
 	Vec3 worldSpacePos_varying[3];
 	Vec4 clipSpacePos_varying[3];//Èı¸ö¶¥µã¾­¹ıMVP±ä»»ºóÔÚ²Ã¼ô¿Õ¼äµÄ×ø±ê
 	float lambertTest_varying;
+	Vec3 testFaceNormal_varying;
 	
 }payload_t;//Àí½â³Éa2vºÍv2fµÄ²¢¼¯ºÏ
 
