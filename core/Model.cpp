@@ -110,6 +110,14 @@ Vec2 Model::GetVertUV(int iface, int nthvert)
 	Vec2 uv = uvVector[uvIndex];
 	return uv;
 }
+Vec3 Model::GetVertNormal(int iface, int nthvert)
+{
+	std::vector<int> face = faceVector[iface];
+	int index = 2 + nthvert * 3;
+	int normalIndex = face[index];
+	Vec3 normal = normalVector[normalIndex];
+	return normal;
+}
 //TGAColor Model::SamplerDiffseColor(Vec2 uv)
 //{
 //	int diffuseMapW = diffuseMap.get_width();

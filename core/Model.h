@@ -24,6 +24,7 @@ public:
 	void load_texture(std::string filename, const char* suffix, TGAImage* img);
 	Vec3 SamplerDiffseColor(Vec2 uv);
 	Vec2 GetVertUV(int iface, int nthvert);
+	Vec3 GetVertNormal(int iface, int nthvert);
 
 	std::vector<int> face(int idx);
 		Vec3 vert(int i);

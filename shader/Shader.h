@@ -9,6 +9,7 @@ typedef struct //attribute¶¥µãÊôĞÔ£¬uniform¶¥µãÆ¬Ôª¶¼ÄÜÓÃcpu´«½øÀ´µÄ£¬varying¶¥µ
 	//Attribute:
 	Model* model;//.objÎÄ¼ş
 	Vec2 uv_attribute[3];//Èı¸ö¶¥µãµÄuv×ø±ê
+	Vec3 normal_attribute[3];
 
 	//uniform:
 	Mat4 MVP_uniform;
