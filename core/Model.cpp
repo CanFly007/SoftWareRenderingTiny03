@@ -1,3 +1,4 @@
+#include <io.h> 
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -68,9 +69,24 @@ Model::Model(const char* filename)
 void Model::create_map(const char* filename)
 {
 	diffuseMap = NULL;
+	normalMap = NULL;
 
-	diffuseMap = new TGAImage();
-	load_texture(filename, "_diffuse.tga", diffuseMap);
+	std::string texfile(filename);
+	size_t dot = texfile.find_last_of(".");
+
+	texfile = texfile.substr(0, dot) + std::string("_diffuse.tga");
+	if (_access(texfile.data(), 0) != -1)//windows API 看下有无这个文件
+	{
+		diffuseMap = new TGAImage();
+		load_texture(filename, "_diffuse.tga", diffuseMap);
+	}
+
+	texfile = texfile.substr(0, dot) + std::string("_normal.tga");
+	if (_access(texfile.data(), 0) != -1)
+	{
+		normalMap = new TGAImage();
+		load_texture(filename, "_normal.tga", normalMap);
+	}
 }
 
 void Model::load_texture(std::string filename, const char* suffix, TGAImage* img)

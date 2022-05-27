@@ -7,13 +7,14 @@
 
 class Model
 {
-private:
+public:
 	std::vector<Vec3> vertVector;
 	std::vector<std::vector<int>> faceVector;//vertex/uv/normal.里面的vector存的是9个元素（即f中一行），外面的vector是所有9个元素的集合
 	std::vector<Vec3> normalVector;
 	std::vector<Vec2> uvVector;
 
 	TGAImage* diffuseMap;
+	TGAImage* normalMap;
 
 public:
 	Model(const char* filename);

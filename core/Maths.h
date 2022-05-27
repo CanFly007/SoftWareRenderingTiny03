@@ -34,6 +34,7 @@ public:
 	Vec2(float e0, float e1);
 	Vec2(Vec3 v3);
 	float& operator[](int index);
+	float operator[](int index)const;
 	Vec2 operator+(const Vec2& v)const;
 	Vec2 operator-(const Vec2& v)const;//¼õ·¨
 	Vec2 operator*(const float t)const;//³Ë·¨
