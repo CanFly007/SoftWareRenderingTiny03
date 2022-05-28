@@ -14,6 +14,7 @@ void PhongShader::vertex_shader(int nfaces, int nvertex)
 
 //根据三角形三个点的坐标位置，和三个点的UV值，可以算出T和B向量
 //注意：施密特正交化需要用到这个像素的法线信息（即顶点法线插值的normal）
+//已知三个点的position和uv，已经该像素的normal，求该像素 的切线和副切线，并组成TBN矩阵
 static Mat3 Cal_TangentToWorldMat(Vec3* worldPosArray, const Vec2* uvArray, Vec3& normal)
 {
     //按照切线算法印象笔记

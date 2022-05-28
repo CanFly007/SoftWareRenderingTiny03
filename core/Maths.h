@@ -124,4 +124,5 @@ Vec3 operator*(float t, const Vec3& v);
 
 Mat4 WorldToViewMat(Vec3 cameraPos, Vec3 lookAtPos, Vec3 upDir);
 Mat4 OrthoProjection(float cameraWidth, float cameraHeight, float near, float far);
+Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far);
 #endif // !MATHS_H

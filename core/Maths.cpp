@@ -248,3 +248,27 @@ Mat4 OrthoProjection(float cameraWidth, float cameraHeight, float near, float fa
 	ortho[2][3] = (near + far) / (near - far);//z方向平移到原点
 	return ortho;
 }
+ //*           2*near/width              0             0           0
+ //*                      0  2*near/height             0           0
+ //*                      0              0    (n+f)/(n-f)   2fn/(n-f)
+ //*                      0              0            -1           0
+Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far)
+{
+	//根据FOV和宽高比，算出宽和长
+	float halfFOV = FOV / 2;//FOV是整个的角度
+	halfFOV = halfFOV / 180.0 * PI;//转换成弧度
+	float halfHeight = tan(halfFOV) * near;
+	float height = halfHeight * 2.0;
+	float width = aspect * height;
+
+	Mat4 perspective = Mat4::identity();
+	//ViewSpace下w分量是1，ClipSpace下w分量是-Z，所以透视变换矩阵的第四行第三列是-1
+	//ViewSpace下x和y分量先通过相似三角形投影到摄像机的近平面，然后从[-width,width]压扁到[-1,1]，注意要提出除数-Z（作为透视除法ClipSpace->NDC)
+	//ViewSpace下z分量：设三行三列为A,三行四列为B。分别将(-n,-1)和(-f,1)代入Zn = (A * Ze + B)/(-Ze)中，解出A和B的值
+	perspective[0][0] = 2 * near / width;
+	perspective[1][1] = 2 * near / height;
+	perspective[2][2] = (near + far) / (near - far);
+	perspective[2][3] = 2 * far * near / (near - far);
+	perspective[3][2] = -1;
+	return perspective;
+}

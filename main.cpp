@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 5, 5);
+const Vec3 EYE(0, 0, 2);
 const Vec3 UP(0, 1, 0);
 const Vec3 TARGET(0, 0, 0);
 
@@ -90,7 +90,7 @@ Mat4 viewport()
 
 void ClearFramebuffer(int width, int height, unsigned char* framebuffer);
 void ClearZbuffer(int width, int height, float* zbuffer);
-void update_matrix(Camera camera, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/);
+void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/);
 
 //正交相机
 float cameraWidth = 3.0;
@@ -109,7 +109,8 @@ int main()
     //转换矩阵
     Mat4 model_mat = Mat4::identity();
     Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
-    Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
+    //Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
+    Mat4 perspective_mat = PerspectiveProjection(60.0, camera.aspect, cameraNearPlane, cameraFarPlane);
     Mat4 MVP = perspective_mat * view_mat * model_mat;
     Mat4 viewPort_mat = viewport();
 
@@ -142,34 +143,13 @@ int main()
 
         // handle events and update view, perspective matrix
         handle_events(camera);
-        update_matrix(camera, shader_model);
+        update_ViewMatrix(camera,perspective_mat, shader_model);//键盘鼠标移动，只会改变viewMatrix矩阵，透视矩阵和模型矩阵可以不变
 
         //Draw Models
-        //TGAImage image(WINDOW_WIDTH, WINDOW_HEIGHT, TGAImage::RGB);
         //Shader* shader;//只是选择使用skybox还是shader_model shader
         for (int i = 0; i < model->nfaces(); i++)
         {
             Draw_Triangles(framebuffer, zbuffer, *shader_model, i);
-            //for (int j = 0; j < 3; j++)
-            //{
-            //    vertPos[j] = model->GetVertPos(i, j);
-            //    vertUV[j] = model->GetVertUV(i, j);
-            //    testScreenCoord[j] = TestWorldToScreen(vertPos[j]);
-            //    testWorldPos[j] = vertPos[j];
-
-            //    orthoSpacePos[j] = MVP * Vec4(vertPos[j], 1.0);
-            //    divisionPos[j] = Vec4(orthoSpacePos[j].x / orthoSpacePos[j].w,
-            //        orthoSpacePos[j].y / orthoSpacePos[j].w, orthoSpacePos[j].z / orthoSpacePos[j].w, orthoSpacePos[j].w);
-            //    viewPortPos[j] = viewPort_mat * divisionPos[j];
-            //    testScreenCoord[j] = Convert_ToVec3(viewPortPos[j]);
-            //}
-
-            //Vec3 normal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
-            //float ndotL = normalize(normal) * normalize(Vec3(0, 0, -1));
-            //ndotL = ndotL > 0 ? ndotL : 0;
-            //float lambert = ndotL * 255;
-            //TGAColor color = TGAColor(lambert, lambert, lambert, 255);
-            //Draw_Triangles(testScreenCoord, framebuffer, zbuffer, color);
         }        
         //显示FPS
         num_frames += 1;
@@ -212,13 +192,13 @@ void ClearFramebuffer(int width, int height, unsigned char* framebuffer)
         }
     }
 }
-void update_matrix(Camera camera,IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/)
+void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/)
 {
     //Camera camera(EYE, TARGET, UP, (float)(width) / height);
     //因为键盘鼠标事件导致摄像机位置变动，需要重新转换矩阵
     Mat4 model_mat = Mat4::identity();
     Mat4 view_mat = WorldToViewMat(camera.eye, camera.target, camera.up);
-    Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
+    //Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
     Mat4 mvp = perspective_mat * view_mat * model_mat;
     shader_model->payload.MVP_uniform = mvp;
     //viewPort = viewport();
