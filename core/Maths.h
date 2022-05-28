@@ -14,6 +14,7 @@ public:
 	float& operator[](int index);
 	Vec3 operator-()const;
 	Vec3 operator-(const Vec3& v)const; //减法
+	Vec3 operator-(const float t)const;
 	Vec3 operator+(const Vec3& v)const;
 	Vec3& operator+=(const Vec3& v);
 	Vec3 operator*(const float t)const;
@@ -42,6 +43,7 @@ public:
 public:
 	union {//调用构造函数会初始化成{0,0}
 		struct { float x, y; };
+		struct { float u, v; };
 		float e[2];
 	};
 };

@@ -12,35 +12,38 @@ void PhongShader::vertex_shader(int nfaces, int nvertex)
     payload.clipSpacePos_varying[nvertex] = payload.MVP_uniform * Vec4(temp_vertPos, 1.0);
 }
 
-static Vec3 cal_normal(Vec3& normal, Vec3* world_coords, const Vec2* uvs, const Vec2& uv, TGAImage* normal_map)
+//根据三角形三个点的坐标位置，和三个点的UV值，可以算出T和B向量
+//注意：施密特正交化需要用到这个像素的法线信息（即顶点法线插值的normal）
+static Mat3 Cal_TangentToWorldMat(Vec3* worldPosArray, const Vec2* uvArray, Vec3& normal)
 {
-    // calculate the difference in UV coordinate
-    float x1 = uvs[1][0] - uvs[0][0];
-    float y1 = uvs[1][1] - uvs[0][1];
-    float x2 = uvs[2][0] - uvs[0][0];
-    float y2 = uvs[2][1] - uvs[0][1];
-    float det = (x1 * y2 - x2 * y1);
+    //按照切线算法印象笔记
+    // [T] = [t1 b1]的逆 * [AB]
+    // [B] = [t2 b2]       [AC]
+    //其中 t1 = B.u - A.u; b1 = B.v - A.v; t2 = C.u - A.u; b2 = C.v - A.v
+    Vec3 AB = worldPosArray[1] - worldPosArray[0];
+    Vec3 AC = worldPosArray[2] - worldPosArray[0];
+    float t1 = uvArray[1].u - uvArray[0].u;//AB向量的U和V差
+    float b1 = uvArray[1].v - uvArray[0].v;
+    float t2 = uvArray[2].u - uvArray[0].u;//AC向量的U和V差
+    float b2 = uvArray[2].v - uvArray[0].v;
 
-    // calculate the difference in world pos
-    Vec3 e1 = world_coords[1] - world_coords[0];
-    Vec3 e2 = world_coords[2] - world_coords[0];
+    float determinant = t1 * b2 - b1 * t2;
+    Vec3 worldSpaceT = b2 * AB - b1 * AC;
+    Vec3 worldSpaceB = -t2 * AB + t1 * AC;
+    worldSpaceT = worldSpaceT / determinant;
+    worldSpaceB = worldSpaceB / determinant;
 
-    Vec3 t = e1 * y2 + e2 * (-y1);
-    Vec3 b = e1 * (-x2) + e2 * x1;
-    t =t/ det;
-    b =b/ det;
-
-    // schmidt orthogonalization
+    //施密特正交化
     normal = normalize(normal);
-    t = normalize(t - (t* normal) * normal);
-    b = normalize(b - (b* normal) * normal - (b* t) * t);
+    worldSpaceT = normalize(worldSpaceT - (worldSpaceT * normal) * normal);
+    worldSpaceB = normalize(worldSpaceB - (worldSpaceB * normal) * normal - (worldSpaceB * worldSpaceT) * worldSpaceT);
 
-    Vec3 sample = texture_sample(uv, normal_map);
-    // modify the range from 0 ~ 1 to -1 ~ +1
-    sample = Vec3(sample[0] * 2 - 1, sample[1] * 2 - 1, sample[2] * 2 - 1);
-
-    Vec3 normal_new = t * sample[0] + b * sample[1] + normal * sample[2];
-    return normal_new;
+    //TBN按列排序，构成 T->W的矩阵
+    Mat3 tangent2World;
+    tangent2World[0][0] = worldSpaceT.x; tangent2World[0][1] = worldSpaceB.x; tangent2World[0][2] = normal.x;
+    tangent2World[1][0] = worldSpaceT.y; tangent2World[1][1] = worldSpaceB.y; tangent2World[1][2] = normal.y;
+    tangent2World[2][0] = worldSpaceT.z; tangent2World[2][1] = worldSpaceB.z; tangent2World[2][2] = normal.z;
+    return tangent2World;
 }
 
 Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
@@ -52,12 +55,15 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
     
     Vec3 diffuseMap = payload.model->SamplerDiffseColor(uv);//返回[0,1]
 
-    if (payload.model->normalMap)//有normalMap
-        normal = cal_normal(normal, payload.worldSpacePos_varying, 
-            payload.uv_attribute, uv, payload.model->normalMap);
-    
-    Vec3 faceNormal = normalize(payload.testFaceNormal_varying);
-    Vec3 worldNormal = normalize(normal);
+    Vec3 worldNormal = normal;
+    if (payload.model->normalMap)//有normalMap,计算切线空间转换矩阵
+    {
+        Mat3 tangent2World = Cal_TangentToWorldMat(payload.worldSpacePos_varying, payload.uv_attribute, normal);
+        Vec3 normalMap = texture_sample(uv, payload.model->normalMap);//TGA是bgr顺序，texture_sample函数里面转成rgb顺序，且范围缩小到[0,1]
+        normalMap = normalMap * 2 - 1;//Unity中的UnpackNormal函数是把[0,1]变成[-1,1]
+        worldNormal = tangent2World * normalMap;
+    }
+ 
     Vec3 worldLightDir = normalize(Vec3(0, 1, 1));//从faceNomal改成顶点normal，成功变成正值了，右手坐标系从shadingPoint出发
     float ndotL = worldNormal * worldLightDir;
     if (ndotL < 0)
