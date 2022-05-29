@@ -71,8 +71,4 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
         ndotL = 0;
 
     return(diffuseMap * ndotL * 255.0);
-    float lambert = payload.lambertTest_varying;
-    return (diffuseMap * lambert);
-    return Vec3(lambert, lambert, lambert);
-    return Vec3(1, 1, 1);
 }

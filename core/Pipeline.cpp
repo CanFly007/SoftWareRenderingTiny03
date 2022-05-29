@@ -198,15 +198,6 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
     {
         shader.vertex_shader(nface, j);
     }
-    //测试fragment是否正常工作，所以在这里虚拟算下faceNormal
-    Vec3 testWorldPos[3] = { shader.payload.worldSpacePos_varying[0],shader.payload.worldSpacePos_varying[1],
-        shader.payload.worldSpacePos_varying[2] };
-    Vec3 faceNormal = Cross((testWorldPos[2] - testWorldPos[0]), (testWorldPos[1] - testWorldPos[0]));
-    float ndotL = normalize(faceNormal) * normalize(Vec3(0, 0, -1));
-    ndotL = ndotL > 0 ? ndotL : 0;
-    float lambert = ndotL * 255;
-    shader.payload.lambertTest_varying = lambert;
-    shader.payload.testFaceNormal_varying = normalize(faceNormal);
 
     Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
 }
