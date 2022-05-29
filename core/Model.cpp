@@ -10,7 +10,10 @@ Model::Model(const char* filename)
 	std::ifstream in;
 	in.open(filename, std::ifstream::in);
 	if (in.fail())
+	{
+		printf("load model failed\n");
 		return;
+	}
 	std::string line;
 	while (!in.eof())
 	{

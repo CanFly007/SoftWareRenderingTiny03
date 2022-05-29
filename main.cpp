@@ -4,19 +4,30 @@
 #include "core/Camera.h"
 #include "platform/win32.h"
 #include "shader/Shader.h"
+#include "core/Scene.h"
 
 using namespace std;
 
-const Vec3 EYE(0, 0, 2);
+const Vec3 EYE(0, 1, 1);
 const Vec3 UP(0, 1, 0);
-const Vec3 TARGET(0, 0, 0);
+const Vec3 TARGET(0, 1, 0);
+
+const scene_t Scenes[]
+{
+	{"fuhua",Build_fuhua_scene},
+	//{"qiyana",build_qiyana_scene},
+	//{"yayi",build_yayi_scene},
+	//{"xier",build_xier_scene},
+	//{"helmet",build_helmet_scene},
+	//{"gun",build_gun_scene},
+};
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 
 
 
-Model* model = NULL;
+//Model* model = NULL;
 
 
 //比如(80,200)和(70,100)这段特殊点，有两个特殊性
@@ -115,7 +126,7 @@ int main()
     Mat4 viewPort_mat = viewport();
 
     //初始化模型和shader
-    model = new Model("obj/african_head.obj");
+    //model = new Model("obj/african_head.obj");
     Vec3 vertPos[3];//一个面上三个顶点的position
     Vec3 testScreenCoord[3];
     Vec3 testWorldPos[3];
@@ -125,8 +136,10 @@ int main()
     Vec4 viewPortPos[3];
 
     //构建场景
-    IShader* shader_model = new PhongShader();
-    shader_model->payload.model = model;
+    Model* models[MAX_MODEL_NUM];//out参数
+    IShader* shader_model;//out参数 = new PhongShader();
+    int model_num = 0;//out参数
+    Scenes[0].Build_scene(models, model_num, &shader_model);
     shader_model->payload.MVP_uniform = MVP;
 
     window_init(WINDOW_WIDTH, WINDOW_HEIGHT, L"SRender");
@@ -147,10 +160,17 @@ int main()
 
         //Draw Models
         //Shader* shader;//只是选择使用skybox还是shader_model shader
-        for (int i = 0; i < model->nfaces(); i++)
+        //依次绘制场景中每个模型
+        for (int m = 0; m < model_num; m++)
         {
-            Draw_Triangles(framebuffer, zbuffer, *shader_model, i);
-        }        
+            shader_model->payload.model = models[m];
+
+            for (int i = 0; i < models[m]->nfaces(); i++)
+            {
+                Draw_Triangles(framebuffer, zbuffer, *shader_model, i);
+            }
+        }
+      
         //显示FPS
         num_frames += 1;
         if (curr_time - print_time >= 1)//每1秒，执行了多少frames
@@ -166,10 +186,18 @@ int main()
         window_draw(framebuffer);
         msg_dispatch();
     }
+
+    // free memory
+    for (int i = 0; i < model_num; i++)
+        if (models[i] != NULL)
+            delete models[i];
+    if (shader_model != NULL)
+        delete shader_model;
+
     //std::cout << print_time << std::endl;
     window_destroy();
     system("pause");
-    delete model;
+
     return 0;
 }
 
