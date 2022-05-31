@@ -65,10 +65,17 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
         worldNormal = tangent2World * normalMap;
     }
  
-    Vec3 worldLightDir = normalize(Vec3(0, 1, 1));//从faceNomal改成顶点normal，成功变成正值了，右手坐标系从shadingPoint出发
+    Vec3 worldLightDir = normalize(Vec3(1, 1, 1));//从faceNomal改成顶点normal，成功变成正值了，右手坐标系从shadingPoint出发
     float ndotL = worldNormal * worldLightDir;
     if (ndotL < 0)
         ndotL = 0;
 
-    return(diffuseMap * ndotL * 255.0);
+    Vec3 worldViewDir = normalize(payload.camera->eye - worldPos);
+    Vec3 halfDir = normalize(worldViewDir + worldLightDir);
+    
+    Vec3 ambient = 0.35 * diffuseMap;
+    Vec3 diffuse = 0.9 * diffuseMap * ndotL;
+    Vec3 specular = Vec3(0.8, 0.8, 0.8) * 0.15 * float_max(0.0, pow(halfDir * worldNormal, 150));//0.8指的是高光的颜色
+
+    return(ambient + diffuse + specular) * 255.0;
 }

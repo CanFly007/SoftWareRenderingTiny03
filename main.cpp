@@ -8,18 +8,18 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 1, 1);
+const Vec3 EYE(0, 2, 2);
 const Vec3 UP(0, 1, 0);
 const Vec3 TARGET(0, 1, 0);
 
 const scene_t Scenes[]
 {
 	{"fuhua",Build_fuhua_scene},
-	//{"qiyana",build_qiyana_scene},
+	{"qiyana",Build_qiyana_scene},
 	//{"yayi",build_yayi_scene},
 	//{"xier",build_xier_scene},
 	//{"helmet",build_helmet_scene},
-	//{"gun",build_gun_scene},
+	{"gun",Build_gun_scene},
 };
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -139,8 +139,9 @@ int main()
     Model* models[MAX_MODEL_NUM];//out参数
     IShader* shader_model;//out参数 = new PhongShader();
     int model_num = 0;//out参数
-    Scenes[0].Build_scene(models, model_num, &shader_model);
+    Scenes[2].Build_scene(models, model_num, &shader_model);
     shader_model->payload.MVP_uniform = MVP;
+    shader_model->payload.camera = &camera;//传入的是指针，所以下面循环中camera的位置变的时候，指针指向的eye值也会变
 
     window_init(WINDOW_WIDTH, WINDOW_HEIGHT, L"SRender");
 

@@ -3,11 +3,13 @@
 
 #include "../core/Maths.h"
 #include "../core/Model.h"
+#include "../core/Camera.h"
 
 typedef struct //attribute顶点属性，uniform顶点片元都能用cpu传进来的，varying顶点到片元
 {
 	//Attribute:
 	Model* model;//.obj文件
+	Camera* camera;
 	Vec2 uv_attribute[3];//三个顶点的uv坐标
 	Vec3 normal_attribute[3];
 

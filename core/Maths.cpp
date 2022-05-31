@@ -272,3 +272,9 @@ Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far)
 	perspective[3][2] = -1;
 	return perspective;
 }
+
+// untility functions
+float float_max(float a, float b)
+{
+	return a > b ? a : b;
+}
