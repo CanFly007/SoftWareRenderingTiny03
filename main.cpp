@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 2, 2);
+const Vec3 EYE(0, 70, 70);
 const Vec3 UP(0, 1, 0);
 const Vec3 TARGET(0, 1, 0);
 
@@ -16,6 +16,7 @@ const scene_t Scenes[]
 {
 	{"fuhua",Build_fuhua_scene},
 	{"qiyana",Build_qiyana_scene},
+    {"elfgirl",Build_elfgirl_scene},
 	//{"yayi",build_yayi_scene},
 	//{"xier",build_xier_scene},
 	//{"helmet",build_helmet_scene},

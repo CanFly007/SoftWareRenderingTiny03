@@ -44,6 +44,30 @@ void Build_qiyana_scene(Model** model, int& m, IShader** shader_use)
 	printf("scene name:%s\n", "qiyana");
 	printf("model number:%d\n", m);
 }
+void Build_elfgirl_scene(Model** model, int& m, IShader** shader_use)
+{
+	m = 7;
+	const char* modelname[] =
+	{
+		"obj/elfgirl/base.obj",
+		"obj/elfgirl/body0.obj",
+		"obj/elfgirl/body1.obj",
+		"obj/elfgirl/body2.obj",
+		"obj/elfgirl/face0.obj",
+		"obj/elfgirl/face1.obj",
+		"obj/elfgirl/hair.obj",
+	};
+	PhongShader* shader_phong = new PhongShader();
+	*shader_use = shader_phong;
+
+	for (int i = 0; i < m; i++)
+	{
+		model[i] = new Model(modelname[i]);
+	}
+
+	printf("scene name:%s\n", "qiyana");
+	printf("model number:%d\n", m);
+}
 void Build_gun_scene(Model** model, int& m, IShader** shader_use)
 {
 	m = 1;

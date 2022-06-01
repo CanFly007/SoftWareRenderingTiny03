@@ -128,4 +128,5 @@ Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far);
 
 // untility functions
 float float_max(float a, float b);
+float float_clamp(float f, float min, float max);
 #endif // !MATHS_H

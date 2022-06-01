@@ -183,7 +183,7 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
                 for (int i = 0; i < 3; i++)
                 {
                     //c[i] = (int)color[i];//[0,255]
-                    c[i] = color[i];//Vec3 -> unsigned char c[3];
+                    c[i] = (int)float_clamp(color[i], 0.0, 255.0);//Vec3 -> unsigned char c[3];
                 }
                 //Vec3 c = Vec3(color[0], color[1], color[2]);
                 set_color(framebuffer, i, j, c);
