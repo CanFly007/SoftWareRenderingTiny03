@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 70, 70);
+const Vec3 EYE(0, 1, 1);
 const Vec3 UP(0, 1, 0);
 const Vec3 TARGET(0, 1, 0);
 
@@ -140,7 +140,7 @@ int main()
     Model* models[MAX_MODEL_NUM];//out参数
     IShader* shader_model;//out参数 = new PhongShader();
     int model_num = 0;//out参数
-    Scenes[2].Build_scene(models, model_num, &shader_model);
+    Scenes[1].Build_scene(models, model_num, &shader_model);
     shader_model->payload.MVP_uniform = MVP;
     shader_model->payload.camera = &camera;//传入的是指针，所以下面循环中camera的位置变的时候，指针指向的eye值也会变
 

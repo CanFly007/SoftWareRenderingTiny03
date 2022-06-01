@@ -67,30 +67,30 @@ Model::Model(const char* filename)
 	std::cerr << "# v# " << vertVector.size() << " vt# " << uvVector.size() << " f# " << faceVector.size() << std::endl;
 
 	//测试：为elfgirl提供特例
-	//create_map(filename);
-	if (strcmp(filename, "obj/elfgirl/base.obj") == 0)
-	{
-		diffuseMap = new TGAImage();
-		load_texture(filename, "_diffuse.tga", diffuseMap);
-	}
-	else if (strcmp(filename, "obj/elfgirl/body0.obj")==0 ||
-		strcmp(filename, "obj/elfgirl/body1.obj")==0 ||
-		strcmp(filename, "obj/elfgirl/body2.obj") == 0)
-	{
-		diffuseMap = new TGAImage();
-		load_texture("obj/elfgirl/body.obj", "_diffuse.tga", diffuseMap);
-	}
-	else if (strcmp(filename, "obj/elfgirl/face0.obj") == 0 ||
-		strcmp(filename, "obj/elfgirl/face1.obj") == 0)
-	{
-		diffuseMap = new TGAImage();
-		load_texture("obj/elfgirl/face.obj", "_diffuse.tga", diffuseMap);
-	}
-	else if (strcmp(filename, "obj/elfgirl/hair.obj") == 0)
-	{
-		diffuseMap = new TGAImage();
-		load_texture("obj/elfgirl/hair.obj", "_diffuse.tga", diffuseMap);
-	}
+	create_map(filename);
+	//if (strcmp(filename, "obj/elfgirl/base.obj") == 0)
+	//{
+	//	diffuseMap = new TGAImage();
+	//	load_texture(filename, "_diffuse.tga", diffuseMap);
+	//}
+	//else if (strcmp(filename, "obj/elfgirl/body0.obj")==0 ||
+	//	strcmp(filename, "obj/elfgirl/body1.obj")==0 ||
+	//	strcmp(filename, "obj/elfgirl/body2.obj") == 0)
+	//{
+	//	diffuseMap = new TGAImage();
+	//	load_texture("obj/elfgirl/body.obj", "_diffuse.tga", diffuseMap);
+	//}
+	//else if (strcmp(filename, "obj/elfgirl/face0.obj") == 0 ||
+	//	strcmp(filename, "obj/elfgirl/face1.obj") == 0)
+	//{
+	//	diffuseMap = new TGAImage();
+	//	load_texture("obj/elfgirl/face.obj", "_diffuse.tga", diffuseMap);
+	//}
+	//else if (strcmp(filename, "obj/elfgirl/hair.obj") == 0)
+	//{
+	//	diffuseMap = new TGAImage();
+	//	load_texture("obj/elfgirl/hair.obj", "_diffuse.tga", diffuseMap);
+	//}
 }
 
 void Model::create_map(const char* filename)
