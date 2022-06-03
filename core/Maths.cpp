@@ -27,6 +27,8 @@ Vec4::Vec4(float e0, float e1, float e2, float e3) : e{ e0,e1,e2,e3 } {}
 Vec4::Vec4(Vec3 v3, float alpha) : e{ v3.x,v3.y,v3.z,alpha } {}
 float Vec4::operator[](int index)const { return e[index]; }
 float& Vec4::operator[](int index) { return e[index]; }
+Vec4 Vec4::operator+(const Vec4& v)const { return Vec4(x + v.x, y + v.y, z + v.z, w + v.w); }
+Vec4 Vec4::operator-(const Vec4& v)const { return Vec4(x - v.x, y - v.y, z - v.z, w - v.w); }
 Vec4 Vec4::operator*(const float t)const { return Vec4(x * t, y * t, z * t, w * t); }
 Vec4 Vec4::operator/(const float t)const { return Vec4(x / t, y / t, z / t, w / t); }
 
@@ -281,4 +283,12 @@ float float_max(float a, float b)
 float float_clamp(float f, float min, float max)
 {
 	return f < min ? min : (f > max ? max : f);
+}
+Vec4 Vec4_lerp(Vec4& start, Vec4& end, float alpha)
+{
+	return start + (end - start) * alpha;
+}
+Vec3 Vec3_lerp(Vec3& start, Vec3& end, float alpha)
+{
+	return start + (end - start) * alpha;
 }

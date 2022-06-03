@@ -56,6 +56,8 @@ public:
 	Vec4(Vec3 v3, float alpha);
 	float operator[](int index)const;
 	float& operator[](int index);//float& 看下是否报错，将a[]设置为左值，报错！float是一个立即数不能成为左值
+	Vec4 operator+(const Vec4& v)const;
+	Vec4 operator-(const Vec4& v)const;
 	Vec4 operator*(const float t)const;
 	Vec4 operator/(const float t)const;
 
@@ -129,4 +131,6 @@ Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far);
 // untility functions
 float float_max(float a, float b);
 float float_clamp(float f, float min, float max);
+Vec3 Vec3_lerp(Vec3& start, Vec3& end, float alpha);
+Vec4 Vec4_lerp(Vec4& start, Vec4& end, float alpha);
 #endif // !MATHS_H

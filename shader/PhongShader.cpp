@@ -10,6 +10,9 @@ void PhongShader::vertex_shader(int nfaces, int nvertex)
 
     payload.worldSpacePos_varying[nvertex] = temp_vertPos;//省略前乘Model2World矩阵
     payload.clipSpacePos_varying[nvertex] = payload.MVP_uniform * Vec4(temp_vertPos, 1.0);
+
+    payload.outClipSpacePos[nvertex] = payload.clipSpacePos_varying[nvertex];//还没齐次裁剪前，第一个裁剪坐标是正常的Clip坐标，是三个点
+    payload.outWorldSpacePos[nvertex] = payload.worldSpacePos_varying[nvertex];
 }
 
 //根据三角形三个点的坐标位置，和三个点的UV值，可以算出T和B向量

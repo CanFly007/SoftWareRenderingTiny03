@@ -6,6 +6,8 @@ static Vec3 Compute_Barycentric2D(Vec3* screenCoordArray,Vec2 P)
     Vec2 B = Vec2(screenCoordArray[1]);
     Vec2 C = Vec2(screenCoordArray[2]);
     float areaABC = Cross(B - A, C - A);
+    if (areaABC == 0)//B和C点在一起时候，BA和CA在一条直线上
+        return Vec3(-1, -1, -1);
     float c1 = Cross(B - P, C - P) / areaABC;
     float c2 = Cross(C - P, A - P) / areaABC;
     return Vec3(c1, c2, 1 - c1 - c2);
@@ -161,9 +163,14 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
         boxMin.y = boxMin.y <= curPoint.y ? boxMin.y : curPoint.y;
         boxMax.x = boxMax.x >= curPoint.x ? boxMax.x : curPoint.x;
         boxMax.y = boxMax.y >= curPoint.y ? boxMax.y : curPoint.y;
+        //要限制boxMin.xy和boxMax.xy在[0,width-1]中，不然zBuffer计算时候会溢出（比如最右边会取到600，应该只能取到599才行)
+        boxMin.x = boxMin.x < 0 ? 0 : boxMin.x;
+        boxMin.y = boxMin.y < 0 ? 0 : boxMin.y;
+        boxMax.x = boxMax.x > WINDOW_WIDTH - 1 ? WINDOW_WIDTH - 1 : boxMax.x;
+        boxMax.y = boxMax.y > WINDOW_HEIGHT - 1 ? WINDOW_HEIGHT - 1 : boxMax.y;
     }
     Vec3 barCoord;
-    for (int i = boxMin.x; i <= boxMax.x; i++)
+    for (int i = boxMin.x; i <= boxMax.x; i++)//左下是(0，0) 右上是(WINDOW_WIDTH-1,WINDOW_HEIGHT-1)
     {
         for (int j = boxMin.y; j <= boxMax.y; j++)
         {
@@ -192,6 +199,120 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
     }
 }
 
+typedef enum
+{
+    W_PLANE,
+    X_LEFT,
+    X_RIGHT,
+    Y_DOWN,
+    Y_UP,
+    Z_NEAR,
+    Z_FAR
+} ClipPlane;
+
+static bool IsInsidePlane(ClipPlane clipPlane, Vec4 clipSpacePos)
+{
+    switch (clipPlane)
+    {
+    case W_PLANE:
+        return clipSpacePos.w >= EPSILON;//防止除以0，增加一个w平面的裁剪，比0.001大即可表示在w平面内
+    case X_LEFT:
+        return clipSpacePos.x >= -clipSpacePos.w;
+    case X_RIGHT:
+        return clipSpacePos.x <= clipSpacePos.w;
+    case Y_DOWN:
+        return clipSpacePos.y >= -clipSpacePos.w;
+    case Y_UP:
+        return clipSpacePos.y <= clipSpacePos.w;
+    case Z_NEAR:
+        return clipSpacePos.z >= -clipSpacePos.w;
+    case Z_FAR:
+        return clipSpacePos.z <= clipSpacePos.w;
+    default:
+        return false;
+    }
+}
+
+static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
+{
+    switch (clipPlane)
+    {
+    case W_PLANE:
+        return (EPSILON - start.w) / (end.w - start.w);
+    case X_LEFT:
+        return (-start.x - start.w) / (end.w - start.w + end.x - start.x);
+    case X_RIGHT:
+        return (start.x - start.w) / (end.w - start.w - end.x + start.x);
+    case Y_DOWN:
+        return (-start.y - start.w) / (end.w - start.w + end.y - start.y);
+    case Y_UP:
+        return (start.y - start.w) / (end.w - start.w - end.y + start.y);
+    case Z_NEAR:
+        return (-start.z - start.w) / (end.w - start.w + end.z - start.z);
+    case Z_FAR:
+        return (start.z - start.w) / (end.w - start.w - end.z + start.z);
+    default:
+        return 0;
+    }
+}
+
+static int ClipWithPlane(ClipPlane clipPlane, int num_vertex, payload_t& payload)
+{
+    if (num_vertex == 0)//在上一个裁剪平面，三角形及其产生的交点都在上个裁剪平面外，所以直接被上个裁剪平面裁剪了，不参与接下来计算
+        return 0;
+
+    int out_num_vertex = 0;
+    Vec4* inClipSpacePos = payload.outClipSpacePos;//上一个裁剪平面裁剪后的顶点位置数组
+    Vec3* inWorldSpacePos = payload.outWorldSpacePos;
+
+    for (int i = 0; i < num_vertex; i++)//如果是3个点 start分别是0 1 2
+    {
+        int startIndex = i;
+        int endIndex = (i + 1) % num_vertex;//endIndex是否要判断会不会找不到点呢？
+        Vec4 start_ClipSpacePos = inClipSpacePos[startIndex];//这个ClipSapcePos应该是前一个裁剪空间下对应索引的位置，而不是VertexShader输出的索引的位置
+        Vec4 end_ClipSpacePos = inClipSpacePos[endIndex];
+        //只有start in end out和start out end in情况需要求交点。而start和end都是in返回start点，start和end都是out返回nothing
+        bool isStartInside = IsInsidePlane(clipPlane, start_ClipSpacePos);
+        bool isEndInside = IsInsidePlane(clipPlane, end_ClipSpacePos);
+        if (isStartInside)//先返回start再返回交点
+        {
+            payload.outClipSpacePos[out_num_vertex] = start_ClipSpacePos;
+            payload.outWorldSpacePos[out_num_vertex] = inWorldSpacePos[startIndex];
+            out_num_vertex++;
+        }
+        if (isStartInside != isEndInside)
+        {
+            float t = GetIntersectRatio(start_ClipSpacePos, end_ClipSpacePos, clipPlane);
+            payload.outClipSpacePos[out_num_vertex] = Vec4_lerp(start_ClipSpacePos, end_ClipSpacePos, t);
+            payload.outWorldSpacePos[out_num_vertex] = Vec3_lerp(inWorldSpacePos[startIndex], inWorldSpacePos[endIndex], t);
+            out_num_vertex++;
+        }
+    }
+    return out_num_vertex;
+}
+int HomogeneousClipping(payload_t& payload)
+{
+    int num_vertex = 3;//最开始是3个点，依次经过6个裁剪平面裁剪后，剩下几个点呢
+    num_vertex = ClipWithPlane(W_PLANE, num_vertex, payload);
+    num_vertex = ClipWithPlane(X_LEFT, num_vertex, payload);//传入上次裁剪后剩下的顶点数，返回这次裁剪后得到的顶点
+    num_vertex = ClipWithPlane(X_RIGHT, num_vertex, payload);
+    num_vertex = ClipWithPlane(Y_DOWN, num_vertex, payload);
+    num_vertex = ClipWithPlane(Y_UP, num_vertex, payload);
+    num_vertex = ClipWithPlane(Z_NEAR, num_vertex, payload);
+    num_vertex = ClipWithPlane(Z_FAR, num_vertex, payload);
+    return num_vertex;
+}
+static void IntersectAssembly(payload_t& payload, int index0, int index1, int index2)//如果是有交点的，需要算出交点的属性替换之前的varying属性
+{
+    payload.clipSpacePos_varying[0] = payload.outClipSpacePos[index0];
+    payload.clipSpacePos_varying[1] = payload.outClipSpacePos[index1];
+    payload.clipSpacePos_varying[2] = payload.outClipSpacePos[index2];//如果有交点，则交点和原来的点可能组成新的三角形
+
+    payload.worldSpacePos_varying[0] = payload.outWorldSpacePos[index0];
+    payload.worldSpacePos_varying[1] = payload.outWorldSpacePos[index1];
+    payload.worldSpacePos_varying[2] = payload.outWorldSpacePos[index2];
+
+}
 void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader, int nface)
 {
     for (int j = 0; j < 3; j++)
@@ -199,5 +320,19 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
         shader.vertex_shader(nface, j);
     }
 
-    Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
+    //homogeneous clipping 齐次裁剪（在ClipSpace中进行，即透视除法变到NDC之前）
+    //和每个裁剪平面裁剪后，可能返回0个点，3个点或4个点
+    int num_vertex = HomogeneousClipping(shader.payload);
+
+    //用上面经过齐次裁剪后得到的新顶点，重新画三角形
+    for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
+    {
+        int index0 = 0;//注意新三角形的首位置永远是0
+        int index1 = i + 1;
+        int index2 = i + 2;
+        //重新装配齐次裁剪后的顶点属性，比如如果和裁剪面有交点，那么要算交点的属性传到新的三角形中
+        IntersectAssembly(shader.payload, index0, index1, index2);
+
+        Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
+    }
 }
