@@ -133,6 +133,7 @@ void Draw_Triangles(Vec3* screenCoordArray, unsigned char* framebuffer,float* zB
 
 void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuffer, float* zBuffer, IShader& shader)
 {
+    //这之前做了齐次裁剪剔除，TODO背面剔除
     //透视除法
     Vec3 ndcPosArray[3];//数组中每个元素代表一个ndc位置
     for (int i = 0; i < 3; i++)
@@ -215,7 +216,7 @@ static bool IsInsidePlane(ClipPlane clipPlane, Vec4 clipSpacePos)
     switch (clipPlane)
     {
     case W_PLANE:
-        return clipSpacePos.w >= EPSILON;//防止除以0，增加一个w平面的裁剪，比0.001大即可表示在w平面内
+        return true;// clipSpacePos.w >= EPSILON;//防止除以0，增加一个w平面的裁剪，比0.001大即可表示在w平面内
     case X_LEFT:
         return clipSpacePos.x >= -clipSpacePos.w;
     case X_RIGHT:
@@ -229,7 +230,7 @@ static bool IsInsidePlane(ClipPlane clipPlane, Vec4 clipSpacePos)
     case Z_FAR:
         return clipSpacePos.z <= clipSpacePos.w;
     default:
-        return false;
+        return true;
     }
 }
 
@@ -242,7 +243,8 @@ static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
     case X_LEFT:
         return (-start.x - start.w) / (end.w - start.w + end.x - start.x);
     case X_RIGHT:
-        return (start.x - start.w) / (end.w - start.w - end.x + start.x);
+        //return (start.x - start.w) / (end.w - start.w - end.x + start.x);
+        return (start.w - start.x) / ((start.w - start.x) - (end.w - end.x));
     case Y_DOWN:
         return (-start.y - start.w) / (end.w - start.w + end.y - start.y);
     case Y_UP:
@@ -258,8 +260,8 @@ static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
 
 static int ClipWithPlane(ClipPlane clipPlane, int num_vertex, payload_t& payload)
 {
-    if (num_vertex == 0)//在上一个裁剪平面，三角形及其产生的交点都在上个裁剪平面外，所以直接被上个裁剪平面裁剪了，不参与接下来计算
-        return 0;
+    //if (num_vertex == 0)//在上一个裁剪平面，三角形及其产生的交点都在上个裁剪平面外，所以直接被上个裁剪平面裁剪了，不参与接下来计算
+        //return 0;
 
     int out_num_vertex = 0;
     Vec4* inClipSpacePos = payload.outClipSpacePos;//上一个裁剪平面裁剪后的顶点位置数组

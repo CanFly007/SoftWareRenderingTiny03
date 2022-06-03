@@ -78,6 +78,6 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
     Vec3 ambient = 0.35 * diffuseMap;
     Vec3 diffuse = 0.9 * diffuseMap * float_max(0.0, ndotL);
     Vec3 specular = Vec3(0.8, 0.8, 0.8) * 0.15 * float_max(0.0, pow(ndotH, 150));//0.8指的是高光的颜色
-
+    return Vec3(255.0, 255.0, 0.0);
     return(ambient + diffuse + specular) * 255.0;
 }
