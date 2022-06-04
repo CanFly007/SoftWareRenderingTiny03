@@ -10,7 +10,7 @@ void PhongShader::vertex_shader(int nfaces, int nvertex)
 
     payload.worldSpacePos_varying[nvertex] = temp_vertPos;//省略前乘Model2World矩阵
     payload.clipSpacePos_varying[nvertex] = payload.MVP_uniform * Vec4(temp_vertPos, 1.0);
-
+    //为了齐次裁剪
     payload.outClipSpacePos[nvertex] = payload.clipSpacePos_varying[nvertex];//还没齐次裁剪前，第一个裁剪坐标是正常的Clip坐标，是三个点
     payload.outWorldSpacePos[nvertex] = payload.worldSpacePos_varying[nvertex];
 }
@@ -78,6 +78,5 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
     Vec3 ambient = 0.35 * diffuseMap;
     Vec3 diffuse = 0.9 * diffuseMap * float_max(0.0, ndotL);
     Vec3 specular = Vec3(0.8, 0.8, 0.8) * 0.15 * float_max(0.0, pow(ndotH, 150));//0.8指的是高光的颜色
-    return Vec3(255.0, 255.0, 0.0);
     return(ambient + diffuse + specular) * 255.0;
 }

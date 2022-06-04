@@ -102,7 +102,7 @@ Mat4 viewport()
 
 void ClearFramebuffer(int width, int height, unsigned char* framebuffer);
 void ClearZbuffer(int width, int height, float* zbuffer);
-void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/);
+void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model, IShader* shader_skybox/*, Mat4& mvp, Mat4& viewPort*/);
 
 //正交相机
 float cameraWidth = 3.0;
@@ -139,8 +139,9 @@ int main()
     //构建场景
     Model* models[MAX_MODEL_NUM];//out参数
     IShader* shader_model;//out参数 = new PhongShader();
+    IShader* shader_skybox;//out参数 里面赋值了 new SkyboxShader()
     int model_num = 0;//out参数
-    Scenes[1].Build_scene(models, model_num, &shader_model);
+    Scenes[3].Build_scene(models, model_num, &shader_model, &shader_skybox);
     shader_model->payload.MVP_uniform = MVP;
     shader_model->payload.camera = &camera;//传入的是指针，所以下面循环中camera的位置变的时候，指针指向的eye值也会变
 
@@ -158,18 +159,31 @@ int main()
 
         // handle events and update view, perspective matrix
         handle_events(camera);
-        update_ViewMatrix(camera,perspective_mat, shader_model);//键盘鼠标移动，只会改变viewMatrix矩阵，透视矩阵和模型矩阵可以不变
+        update_ViewMatrix(camera,perspective_mat, shader_model, shader_skybox);//键盘鼠标移动，只会改变viewMatrix矩阵，透视矩阵和模型矩阵可以不变
 
         //Draw Models
         //Shader* shader;//只是选择使用skybox还是shader_model shader
         //依次绘制场景中每个模型
         for (int m = 0; m < model_num; m++)
         {
-            shader_model->payload.model = models[m];
+            IShader* shader;//如果是天空盒模型，shader就用天空盒的shader，并填充模型到shader的payload.model参数中
+            if (models[m]->isSkyboxModel)
+            {
+                shader = shader_skybox;
+                if (shader_skybox != NULL)
+                {
+                    shader_skybox->payload.model = models[m];
+                }
+            }
+            else
+            {
+                shader_model->payload.model = models[m];
+                shader = shader_model;
+            }
 
             for (int i = 0; i < models[m]->nfaces(); i++)
             {
-                Draw_Triangles(framebuffer, zbuffer, *shader_model, i);
+                Draw_Triangles(framebuffer, zbuffer, *shader, i);
             }
         }
       
@@ -222,7 +236,7 @@ void ClearFramebuffer(int width, int height, unsigned char* framebuffer)
         }
     }
 }
-void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model/*, Mat4& mvp, Mat4& viewPort*/)
+void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_model, IShader* shader_skybox/*, Mat4& mvp, Mat4& viewPort*/)
 {
     //Camera camera(EYE, TARGET, UP, (float)(width) / height);
     //因为键盘鼠标事件导致摄像机位置变动，需要重新转换矩阵
@@ -231,5 +245,13 @@ void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_mode
     //Mat4 perspective_mat = OrthoProjection(cameraWidth, cameraHeight, cameraNearPlane, cameraFarPlane);
     Mat4 mvp = perspective_mat * view_mat * model_mat;
     shader_model->payload.MVP_uniform = mvp;
-    //viewPort = viewport();
+    
+    if (shader_skybox != NULL)//天空盒的ViewMat只变换旋转的部分，不变换平移的部分
+    {
+        Mat4 view_skybox = view_mat;//由于不平移，所以这个Box是以camera的位置为中心的
+        view_skybox[0][3] = 0;
+        view_skybox[1][3] = 0;
+        view_skybox[2][3] = 0;
+        shader_skybox->payload.MVP_uniform = perspective_mat * view_skybox * model_mat;
+    }
 }

@@ -1,9 +1,15 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "../core/macro.h"
 #include "../core/Maths.h"
 #include "../core/Model.h"
 #include "../core/Camera.h"
+
+typedef struct cubemap
+{
+	TGAImage* faces[6];
+}cubemap_t;
 
 typedef struct //attribute顶点属性，uniform顶点片元都能用cpu传进来的，varying顶点到片元
 {
@@ -40,6 +46,13 @@ public:
 	void vertex_shader(int nfaces, int nvertex);
 	Vec3 fragment_shader(float alpha, float beta, float gamma);
 
+};
+
+class SkyboxShader :public IShader
+{
+public:
+	void vertex_shader(int nfaces, int nvertex);
+	Vec3 fragment_shader(float alpha, float beta, float gamma);
 };
 
 #endif // !SHADER_H

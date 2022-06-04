@@ -147,11 +147,14 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
     Vec3 screenSpacePosArray[3];
     int width = window->width;
     int height = window->height;
+    bool isSkybox = shader.payload.model->isSkyboxModel;
     for (int i = 0; i < 3; i++)
     {
         screenSpacePosArray[i].x = (ndcPosArray[i].x + 1.0) * 0.5 * width;
         screenSpacePosArray[i].y = (ndcPosArray[i].y + 1.0) * 0.5 * height;
         screenSpacePosArray[i].z = ndcPosArray[i].z;
+        if (isSkybox)//skybox主要算法就在这？将z置于无限远的地方
+            screenSpacePosArray[i].z = 1000;//如果是天空盒，深度不用NDC中的z，直接覆盖成1000表示无限远
     }
     //通过重心坐标法，找到AABB矩形中要渲染的像素
     unsigned char c[3];
@@ -244,7 +247,7 @@ static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
         return (-start.x - start.w) / (end.w - start.w + end.x - start.x);
     case X_RIGHT:
         //return (start.x - start.w) / (end.w - start.w - end.x + start.x);
-        return (start.w - start.x) / ((start.w - start.x) - (end.w - end.x));
+        return (start.w - start.x) / ((start.w - start.x) - (end.w - end.x));//和上面一样的
     case Y_DOWN:
         return (-start.y - start.w) / (end.w - start.w + end.y - start.y);
     case Y_UP:
@@ -324,16 +327,16 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
 
     //homogeneous clipping 齐次裁剪（在ClipSpace中进行，即透视除法变到NDC之前）
     //和每个裁剪平面裁剪后，可能返回0个点，3个点或4个点
-    int num_vertex = HomogeneousClipping(shader.payload);
+    //int num_vertex = HomogeneousClipping(shader.payload);
 
     //用上面经过齐次裁剪后得到的新顶点，重新画三角形
-    for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
+    //for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
     {
-        int index0 = 0;//注意新三角形的首位置永远是0
-        int index1 = i + 1;
-        int index2 = i + 2;
+        //int index0 = 0;//注意新三角形的首位置永远是0
+        //int index1 = i + 1;
+        //int index2 = i + 2;
         //重新装配齐次裁剪后的顶点属性，比如如果和裁剪面有交点，那么要算交点的属性传到新的三角形中
-        IntersectAssembly(shader.payload, index0, index1, index2);
+        //IntersectAssembly(shader.payload, index0, index1, index2);
 
         Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
     }

@@ -5,7 +5,10 @@
 #include <sstream>
 #include "./Model.h"
 
-Model::Model(const char* filename)
+#include "../shader/Shader.h"
+
+
+Model::Model(const char* filename, bool isSkyboxModel) :isSkyboxModel(isSkyboxModel)
 {
 	std::ifstream in;
 	in.open(filename, std::ifstream::in);
@@ -91,6 +94,12 @@ Model::Model(const char* filename)
 	//	diffuseMap = new TGAImage();
 	//	load_texture("obj/elfgirl/hair.obj", "_diffuse.tga", diffuseMap);
 	//}
+
+	if (isSkyboxModel)
+	{
+		environment_map = new cubemap_t();
+		load_cubemap(filename);
+	}
 }
 
 void Model::create_map(const char* filename)
@@ -126,6 +135,22 @@ void Model::load_texture(std::string filename, const char* suffix, TGAImage* img
 		std::cerr << "texture file " << texfile << " loading " << (img->read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
 		img->flip_vertically();
 	}
+}
+
+void Model::load_cubemap(const char* filename)
+{
+	environment_map->faces[0] = new TGAImage();
+	load_texture(filename, "_right.tgb", environment_map->faces[0]);
+	environment_map->faces[1] = new TGAImage();
+	load_texture(filename, "_left.tga", environment_map->faces[1]);
+	environment_map->faces[2] = new TGAImage();
+	load_texture(filename, "_top.tga", environment_map->faces[2]);
+	environment_map->faces[3] = new TGAImage();
+	load_texture(filename, "_bottom.tga", environment_map->faces[3]);
+	environment_map->faces[4] = new TGAImage();
+	load_texture(filename, "_back.tga", environment_map->faces[4]);
+	environment_map->faces[5] = new TGAImage();
+	load_texture(filename, "_front.tga", environment_map->faces[5]);
 }
 
 Model::~Model()
