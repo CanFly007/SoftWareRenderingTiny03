@@ -246,8 +246,7 @@ static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
     case X_LEFT:
         return (-start.x - start.w) / (end.w - start.w + end.x - start.x);
     case X_RIGHT:
-        //return (start.x - start.w) / (end.w - start.w - end.x + start.x);
-        return (start.w - start.x) / ((start.w - start.x) - (end.w - end.x));//和上面一样的
+        return (start.x - start.w) / (end.w - start.w - end.x + start.x);
     case Y_DOWN:
         return (-start.y - start.w) / (end.w - start.w + end.y - start.y);
     case Y_UP:
@@ -263,8 +262,8 @@ static float GetIntersectRatio(Vec4 start, Vec4 end, ClipPlane clipPlane)
 
 static int ClipWithPlane(ClipPlane clipPlane, int num_vertex, payload_t& payload)
 {
-    //if (num_vertex == 0)//在上一个裁剪平面，三角形及其产生的交点都在上个裁剪平面外，所以直接被上个裁剪平面裁剪了，不参与接下来计算
-        //return 0;
+    if (num_vertex == 0)//在上一个裁剪平面，三角形及其产生的交点都在上个裁剪平面外，所以直接被上个裁剪平面裁剪了，不参与接下来计算
+        return 0;
 
     int out_num_vertex = 0;
     //因为inClipSpacePos是一个指针，所以当outClipSpacePos值被改变后，下次循环这个inClipSpacePos也会变成错误的

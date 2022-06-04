@@ -140,7 +140,7 @@ void Model::load_texture(std::string filename, const char* suffix, TGAImage* img
 void Model::load_cubemap(const char* filename)
 {
 	environment_map->faces[0] = new TGAImage();
-	load_texture(filename, "_right.tgb", environment_map->faces[0]);
+	load_texture(filename, "_right.tga", environment_map->faces[0]);
 	environment_map->faces[1] = new TGAImage();
 	load_texture(filename, "_left.tga", environment_map->faces[1]);
 	environment_map->faces[2] = new TGAImage();
