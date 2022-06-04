@@ -57,7 +57,9 @@ Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
     Vec3 normal = payload.normal_attribute[0] * alpha + payload.normal_attribute[1] * beta + payload.normal_attribute[2] * gamma;
     //上面计算插值，在SRender中还除以了clipSpacePos中的w分量
     
-    Vec3 diffuseMap = payload.model->SamplerDiffseColor(uv);//返回[0,1]
+    Vec3 diffuseMap = Vec3(1, 1, 0);
+    if(payload.model->diffuseMap)
+        diffuseMap = payload.model->SamplerDiffseColor(uv);//返回[0,1]
 
     Vec3 worldNormal = normal;
     if (payload.model->normalMap)//有normalMap,计算切线空间转换矩阵

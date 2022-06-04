@@ -95,3 +95,18 @@ void Build_gun_scene(Model** model, int& m, IShader** shader_use, IShader** shad
 	printf("scene name:%s\n", "gun");
 	printf("model number:%d\n", m);
 }
+
+void Build_test_obj(Model** model, int& m, IShader** shader_use, IShader** shader_skybox)
+{
+	m = 1;
+	const char* modelname[] =
+	{
+		"obj/test.obj",
+	};
+
+	PhongShader* shader_phong = new PhongShader();
+	*shader_use = shader_phong;
+	*shader_skybox = NULL;
+
+	model[0] = new Model(modelname[0]);
+}

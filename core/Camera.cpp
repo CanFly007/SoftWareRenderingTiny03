@@ -104,6 +104,6 @@ void handle_events(Camera& camera)
 	camera.x = normalize(Cross(camera.up, camera.z));
 	camera.y = normalize(Cross(camera.z, camera.x));
 
-	handle_mouse_events(camera);
+	//handle_mouse_events(camera);
 	handle_key_events(camera);
 }

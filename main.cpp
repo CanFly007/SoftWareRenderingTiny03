@@ -8,9 +8,9 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 1, 1);
+const Vec3 EYE(0, 0, 2);
 const Vec3 UP(0, 1, 0);
-const Vec3 TARGET(0, 1, 0);
+const Vec3 TARGET(0, 0, 0);
 
 const scene_t Scenes[]
 {
@@ -21,6 +21,7 @@ const scene_t Scenes[]
 	//{"xier",build_xier_scene},
 	//{"helmet",build_helmet_scene},
 	{"gun",Build_gun_scene},
+    {"testObj",Build_test_obj},
 };
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
@@ -141,7 +142,7 @@ int main()
     IShader* shader_model;//out参数 = new PhongShader();
     IShader* shader_skybox;//out参数 里面赋值了 new SkyboxShader()
     int model_num = 0;//out参数
-    Scenes[1].Build_scene(models, model_num, &shader_model, &shader_skybox);
+    Scenes[4].Build_scene(models, model_num, &shader_model, &shader_skybox);
     shader_model->payload.MVP_uniform = MVP;
     shader_model->payload.camera = &camera;//传入的是指针，所以下面循环中camera的位置变的时候，指针指向的eye值也会变
 
