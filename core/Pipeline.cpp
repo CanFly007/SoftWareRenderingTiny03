@@ -267,8 +267,15 @@ static int ClipWithPlane(ClipPlane clipPlane, int num_vertex, payload_t& payload
         //return 0;
 
     int out_num_vertex = 0;
-    Vec4* inClipSpacePos = payload.outClipSpacePos;//上一个裁剪平面裁剪后的顶点位置数组
-    Vec3* inWorldSpacePos = payload.outWorldSpacePos;
+    //因为inClipSpacePos是一个指针，所以当outClipSpacePos值被改变后，下次循环这个inClipSpacePos也会变成错误的
+    Vec4 inClipSpacePos[MAX_VERTEX];
+    for (int i = 0; i < MAX_VERTEX; i++)
+        inClipSpacePos[i] = payload.outClipSpacePos[i];//上一个裁剪平面裁剪后的顶点位置数组
+    //Vec4* inClipSpacePos = payload.outClipSpacePos;
+    Vec3 inWorldSpacePos[MAX_VERTEX];
+    for (int i = 0; i < MAX_VERTEX; i++)
+        inWorldSpacePos[i] = payload.outWorldSpacePos[i];
+    //Vec3* inWorldSpacePos = payload.outWorldSpacePos;
 
     for (int i = 0; i < num_vertex; i++)//如果是3个点 start分别是0 1 2
     {
