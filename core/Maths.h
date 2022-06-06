@@ -39,6 +39,7 @@ public:
 	Vec2 operator+(const Vec2& v)const;
 	Vec2 operator-(const Vec2& v)const;//减法
 	Vec2 operator*(const float t)const;//乘法
+	Vec2 operator/(const float t)const;
 
 public:
 	union {//调用构造函数会初始化成{0,0}

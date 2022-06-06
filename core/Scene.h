@@ -13,4 +13,6 @@ void Build_fuhua_scene(Model** model, int& m, IShader** shader_use, IShader** sh
 void Build_qiyana_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 void Build_elfgirl_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 void Build_gun_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
+
+void Build_PerspectiveCorrect(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 void Build_test_obj(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);

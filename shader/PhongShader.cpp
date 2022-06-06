@@ -52,9 +52,18 @@ static Mat3 Cal_TangentToWorldMat(Vec3* worldPosArray, const Vec2* uvArray, Vec3
 
 Vec3 PhongShader::fragment_shader(float alpha, float beta, float gamma)
 {
-    Vec3 worldPos = payload.worldSpacePos_varying[0] * alpha + payload.worldSpacePos_varying[1] * beta + payload.worldSpacePos_varying[2] * gamma;
-    Vec2 uv = payload.uv_attribute[0] * alpha + payload.uv_attribute[1] * beta + payload.uv_attribute[2] * gamma;
-    Vec3 normal = payload.normal_attribute[0] * alpha + payload.normal_attribute[1] * beta + payload.normal_attribute[2] * gamma;
+    //ClipSpace中的w分量，就是-Zeye的值。参考印象笔记透视矫正插值中的公式(16)
+    Vec3 viewSpaceZ = { -payload.clipSpacePos_varying[0].w,
+        -payload.clipSpacePos_varying[1].w,-payload.clipSpacePos_varying[2].w };//三个顶点观察空间Z的值
+    //计算公式中的Zt
+    float Zt = 1.0 / (alpha / viewSpaceZ[0] + beta / viewSpaceZ[1] + gamma / viewSpaceZ[2]);
+
+    Vec3 worldPos = (payload.worldSpacePos_varying[0] * alpha / viewSpaceZ[0] +
+        payload.worldSpacePos_varying[1] * beta / viewSpaceZ[1] + payload.worldSpacePos_varying[2] * gamma / viewSpaceZ[2]) * Zt;
+    Vec2 uv = (payload.uv_attribute[0] * alpha / viewSpaceZ[0] +
+        payload.uv_attribute[1] * beta / viewSpaceZ[1] + payload.uv_attribute[2] * gamma / viewSpaceZ[2]) * Zt;
+    Vec3 normal = (payload.normal_attribute[0] * alpha / viewSpaceZ[0] +
+        payload.normal_attribute[1] * beta / viewSpaceZ[1] + payload.normal_attribute[2] * gamma / viewSpaceZ[2]) * Zt;
     //上面计算插值，在SRender中还除以了clipSpacePos中的w分量
     
     Vec3 diffuseMap = Vec3(1, 1, 0);
