@@ -76,7 +76,7 @@ void Build_gun_scene(Model** model, int& m, IShader** shader_use, IShader** shad
 	m = 2;
 	const char* modelname[] =
 	{
-		"obj/gun/Cerberus.obj",
+		"obj/gun/Cerberus11111111.obj",
 		"obj/skybox4/box.obj"
 	};
 

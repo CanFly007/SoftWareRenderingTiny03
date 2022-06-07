@@ -17,7 +17,15 @@ void SkyboxShader::vertex_shader(int nfaces, int nvertex)
 
 Vec3 SkyboxShader::fragment_shader(float alpha, float beta, float gamma)
 {
-    Vec3 worldPos = payload.worldSpacePos_varying[0] * alpha + payload.worldSpacePos_varying[1] * beta + payload.worldSpacePos_varying[2] * gamma;
+    //天空盒也要进行透视矫正插值，不然会看到外面边缘
+    float Zt = 1.0 / (alpha / -payload.clipSpacePos_varying[0].w + 
+        beta / -payload.clipSpacePos_varying[1].w + gamma / -payload.clipSpacePos_varying[2].w);
+    Vec3 worldPos = (payload.worldSpacePos_varying[0] * alpha / -payload.clipSpacePos_varying[0].w +
+        payload.worldSpacePos_varying[1] * beta / -payload.clipSpacePos_varying[1].w +
+        payload.worldSpacePos_varying[2] * gamma / -payload.clipSpacePos_varying[2].w) * Zt;
+    //Vec3 worldPos = payload.worldSpacePos_varying[0] * alpha + 
+    //    payload.worldSpacePos_varying[1] * beta + payload.worldSpacePos_varying[2] * gamma;
+    //天空盒的采样方向worldPos也需要做透视矫正插值，可以注释解注释上面两行观察差异（矩形的镜子没有矫正时候会扭曲）
     //上面计算插值，在SRender中还除以了clipSpacePos中的w分量
 
     Vec3 result_color;

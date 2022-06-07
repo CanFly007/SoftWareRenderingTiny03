@@ -6,7 +6,7 @@
 #include "../platform/win32.h"
 
 const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_HEIGHT = 750;
 
 #include "../tgaimage.h"
 #include "Model.h"

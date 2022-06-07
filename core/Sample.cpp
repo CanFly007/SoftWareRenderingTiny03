@@ -48,7 +48,7 @@ static int CalCubemapUV(Vec3 direction, Vec2& uv)//ÄÄ¸ö¾ø¶ÔÖµ´ó¾ÍÔÚÄÄ±ß£¬ÆäËûÁ½¸
 		{
 			uv.u = (direction.x / absZ + 1.0f) / 2.0f;
 			uv.v = (direction.y / absZ + 1.0f) / 2.0f;
-			return 4;
+			return 5;
 		}
 	}
 }
