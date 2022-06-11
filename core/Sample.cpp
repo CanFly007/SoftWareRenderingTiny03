@@ -55,16 +55,19 @@ static int CalCubemapUV(Vec3 direction, Vec2& uv)//ÄÄ¸ö¾ø¶ÔÖµ´ó¾ÍÔÚÄÄ±ß£¬ÆäËûÁ½¸
 
 Vec3 texture_sample(Vec2 uv, TGAImage* image)
 {
+	if (image == nullptr)//Ã»ÓÐÕâÕÅÍ¼£¬·µ»ØºÚÉ«
+		return Vec3(0, 0, 0);
+
 	uv[0] = fmod(uv[0], 1);
-	uv[1] = fmod(uv[1], 1);
+	uv[1] = fmod(uv[1], 1);//ÇóÓàÔËËã ±íÊ¾clamp
 	//printf("%f %f\n", uv[0], uv[1]);
 	int uv0 = uv[0] * image->get_width();
 	int uv1 = uv[1] * image->get_height();
-	TGAColor c = image->get(uv0, uv1);
+	TGAColor c = image->get(uv0, uv1);//cµÄ·¶Î§ÊÇ[0,255]
 	Vec3 res;
 	for (int i = 0; i < 3; i++)
 		res[2 - i] = (float)c[i] / 255.f; //Ó¦¸Ã¾Í´íÔÚÕâ¿é£¬TGAColorÀàË³ÐòÊÇb g r a£¬Òª½á¹ûres°ÑÇ°ÈýÏîµßµ¹Ò»ÏÂ
-	return res;
+	return res;//·µ»Ø·¶Î§ÊÇ[0.0, 1.0]
 }
 
 Vec3 cubemap_sample(Vec3 direction, cubemap_t* cubemap)

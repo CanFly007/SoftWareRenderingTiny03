@@ -20,6 +20,9 @@ public:
 
 	TGAImage* diffuseMap;
 	TGAImage* normalMap;
+	TGAImage* roughnessMap;
+	TGAImage* metalnessMap;
+	TGAImage* emissionMap;
 
 public:
 	Model(const char* filename, bool isSkyboxModel = false);

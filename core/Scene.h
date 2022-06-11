@@ -9,6 +9,8 @@ typedef struct
 	void (*Build_scene)(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 }scene_t;
 
+void LoadIBLMap(payload_t& pay, const char* path);
+
 void Build_fuhua_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 void Build_qiyana_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);
 void Build_elfgirl_scene(Model** model, int& m, IShader** shader_use, IShader** shader_skybox);

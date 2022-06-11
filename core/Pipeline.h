@@ -5,8 +5,8 @@
 #include "../shader/shader.h"
 #include "../platform/win32.h"
 
-const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 750;
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 
 #include "../tgaimage.h"
 #include "Model.h"

@@ -116,12 +116,29 @@ void Model::create_map(const char* filename)
 		diffuseMap = new TGAImage();
 		load_texture(filename, "_diffuse.tga", diffuseMap);
 	}
-
 	texfile = texfile.substr(0, dot) + std::string("_normal.tga");
 	if (_access(texfile.data(), 0) != -1)
 	{
 		normalMap = new TGAImage();
 		load_texture(filename, "_normal.tga", normalMap);
+	}
+	texfile = texfile.substr(0, dot) + std::string("_roughness.tga");
+	if (_access(texfile.data(), 0) != -1)
+	{
+		roughnessMap = new TGAImage();
+		load_texture(filename, "_roughness.tga", roughnessMap);
+	}
+	texfile = texfile.substr(0, dot) + std::string("_metalness.tga");
+	if (_access(texfile.data(), 0) != -1)
+	{
+		metalnessMap = new TGAImage();
+		load_texture(filename, "_metalness.tga", metalnessMap);
+	}
+	texfile = texfile.substr(0, dot) + std::string("_emission.tga");
+	if (_access(texfile.data(), 0) != -1)
+	{
+		emissionMap = new TGAImage();
+		load_texture(filename, "_emission.tga", emissionMap);
 	}
 }
 
@@ -140,22 +157,33 @@ void Model::load_texture(std::string filename, const char* suffix, TGAImage* img
 void Model::load_cubemap(const char* filename)
 {
 	environment_map->faces[0] = new TGAImage();
-	load_texture(filename, "_right1.tga", environment_map->faces[0]);
+	load_texture(filename, "_right.tga", environment_map->faces[0]);
 	environment_map->faces[1] = new TGAImage();
-	load_texture(filename, "_left1.tga", environment_map->faces[1]);
+	load_texture(filename, "_left.tga", environment_map->faces[1]);
 	environment_map->faces[2] = new TGAImage();
-	load_texture(filename, "_top1.tga", environment_map->faces[2]);
+	load_texture(filename, "_top.tga", environment_map->faces[2]);
 	environment_map->faces[3] = new TGAImage();
-	load_texture(filename, "_bottom1.tga", environment_map->faces[3]);
+	load_texture(filename, "_bottom.tga", environment_map->faces[3]);
 	environment_map->faces[4] = new TGAImage();
-	load_texture(filename, "_back1.tga", environment_map->faces[4]);
+	load_texture(filename, "_back.tga", environment_map->faces[4]);
 	environment_map->faces[5] = new TGAImage();
-	load_texture(filename, "_front1.tga", environment_map->faces[5]);
+	load_texture(filename, "_front.tga", environment_map->faces[5]);
 }
 
 Model::~Model()
 {
+	if (diffuseMap) { delete diffuseMap; diffuseMap = NULL; }
+	if (normalMap) { delete normalMap; normalMap = NULL; }
+	if (roughnessMap) { delete roughnessMap; roughnessMap = NULL; }
+	if (metalnessMap) { delete metalnessMap; metalnessMap = NULL; }
+	if (emissionMap) { delete emissionMap; emissionMap = NULL; }
 
+	if (environment_map) 
+	{ 
+		for (int i = 0; i < 6; i++)
+			delete environment_map->faces[i];
+		delete environment_map;
+	}
 }
 
 int Model::nfaces()

@@ -5,6 +5,8 @@ Camera::Camera(Vec3 eye, Vec3 target, Vec3 up, float aspect) :
 	eye(eye), target(target), up(up), aspect(aspect) {}
 Camera::~Camera() {}
 
+float curWheelDelta = 0.0;
+
 void updata_camera_pos(Camera& camera)
 {
 	Vec3 from_target = camera.eye - camera.target;			// vector point from target to camera's position
@@ -16,7 +18,14 @@ void updata_camera_pos(Camera& camera)
 	float y_delta = window->mouse_info.orbit_delta[1] / window->height;
 
 	// for mouse wheel
-	radius *= (float)pow(0.95, window->mouse_info.wheel_delta);
+	//radius *= (float)pow(0.95, window->mouse_info.wheel_delta);//之前的滚轮动一下会一直前进或后退
+
+	float wheelDelta = window->mouse_info.wheel_delta;
+	if (wheelDelta != curWheelDelta)
+	{
+		curWheelDelta = wheelDelta;
+		radius *= (float)pow(0.95, window->mouse_info.wheel_delta);
+	}
 
 	float factor = 1.5 * PI;
 	// for mouse left button

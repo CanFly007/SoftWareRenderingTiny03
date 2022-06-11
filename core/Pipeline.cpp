@@ -1,5 +1,17 @@
 #include "./Pipeline.h"
 
+static int IsBackFacing(Vec3 NDCPos[3])
+{
+    //return false;
+    Vec3 a = NDCPos[0];
+    Vec3 b = NDCPos[1];
+    Vec3 c = NDCPos[2];
+    float signed_area = a.x * b.y - a.y * b.x +
+        b.x * c.y - b.y * c.x +
+        c.x * a.y - c.y * a.x;   //|AB AC|
+    return signed_area <= 0;
+}
+
 static Vec3 Compute_Barycentric2D(Vec3* screenCoordArray,Vec2 P)
 {
     Vec2 A = Vec2(screenCoordArray[0]);//屏幕空间
@@ -156,6 +168,14 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
         if (isSkybox)//skybox主要算法就在这？将z置于无限远的地方
             screenSpacePosArray[i].z = 1000;//如果是天空盒，深度不用NDC中的z，直接覆盖成1000表示无限远
     }
+
+    //背面裁剪，通过三个点是否是逆时针，天空盒不能背面裁剪
+    if (!isSkybox)
+    {
+        if (IsBackFacing(ndcPosArray))
+            return;
+    }
+
     //通过重心坐标法，找到AABB矩形中要渲染的像素
     unsigned char c[3];
     Vec2 boxMin = Vec2(WINDOW_WIDTH, WINDOW_HEIGHT);

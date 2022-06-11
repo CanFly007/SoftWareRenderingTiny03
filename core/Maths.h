@@ -118,9 +118,11 @@ inline Vec3 normalize(const Vec3 v)
 {
 	float length = std::sqrt(v * v);
 	return v / length;
+}
 
-	//float length = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-	//return Vec3(v.x / length, v.y / length, v.z / length);
+inline Vec3 CwiseProduct(const Vec3& a, const Vec3& b) 
+{
+	return Vec3(a.x * b.x, a.y * b.y, a.z * b.z); 
 }
 
 Vec3 Convert_ToVec3(const Vec4& v4);

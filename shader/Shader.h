@@ -11,6 +11,15 @@ typedef struct cubemap
 	TGAImage* faces[6];
 }cubemap_t;
 
+typedef struct IBLMap
+{
+	int mipMapLevels;
+	cubemap_t* irradianceMap;//Âş·´ÉäIBL
+	TGAImage* brdfLut;
+	cubemap_t* prefilter_maps[15];
+	
+}IBLMap_t;
+
 typedef struct //attribute¶¥µãÊôĞÔ£¬uniform¶¥µãÆ¬Ôª¶¼ÄÜÓÃcpu´«½øÀ´µÄ£¬varying¶¥µãµ½Æ¬Ôª
 {
 	//Attribute:
@@ -30,6 +39,8 @@ typedef struct //attribute¶¥µãÊôĞÔ£¬uniform¶¥µãÆ¬Ôª¶¼ÄÜÓÃcpu´«½øÀ´µÄ£¬varying¶¥µ
 	Vec4 outClipSpacePos[MAX_VERTEX];//ÒòÎª²»ÖªµÀ²Ã¼ôºóÊÇ¼¸¸ö¶¥µã£¬ËùÒÔÓÃMAX_VERTEX±íÊ¾
 	Vec3 outWorldSpacePos[MAX_VERTEX];
 	
+	//IBL
+	IBLMap_t* iblMap;
 }payload_t;//Àí½â³Éa2vºÍv2fµÄ²¢¼¯ºÏ
 
 class IShader
@@ -49,6 +60,13 @@ public:
 };
 
 class SkyboxShader :public IShader
+{
+public:
+	void vertex_shader(int nfaces, int nvertex);
+	Vec3 fragment_shader(float alpha, float beta, float gamma);
+};
+
+class PBRShader :public IShader
 {
 public:
 	void vertex_shader(int nfaces, int nvertex);
