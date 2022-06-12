@@ -265,7 +265,7 @@ Mat4 PerspectiveProjection(float FOV, float aspect, float near, float far)
 	float height = halfHeight * 2.0;
 	float width = aspect * height;
 
-	Mat4 perspective = Mat4::identity();
+	Mat4 perspective;// = Mat4::identity();//一定要注意！perspective[3][3]的值是0而不是1
 	//ViewSpace下w分量是1，ClipSpace下w分量是-Z，所以透视变换矩阵的第四行第三列是-1
 	//ViewSpace下x和y分量先通过相似三角形投影到摄像机的近平面，然后从[-width,width]压扁到[-1,1]，注意要提出除数-Z（作为透视除法ClipSpace->NDC)
 	//ViewSpace下z分量：设三行三列为A,三行四列为B。分别将(-n,-1)和(-f,1)代入Zn = (A * Ze + B)/(-Ze)中，解出A和B的值

@@ -25,7 +25,7 @@ public:
 	TGAImage* emissionMap;
 
 public:
-	Model(const char* filename, bool isSkyboxModel = false);
+	Model(const char* filename, bool isSkyboxModel = false, bool isUVYFlip = false);//像qiyala这些模型的uv的Y都要颠倒，gun不用
 	~Model();
 
 	int nfaces();//返回多少个面数，即f 有多少行

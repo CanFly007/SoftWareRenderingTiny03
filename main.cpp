@@ -8,9 +8,9 @@
 
 using namespace std;
 
-const Vec3 EYE(0, 0, 1);
+const Vec3 EYE(0, 4, 1);
 const Vec3 UP(0, 1, 0);
-const Vec3 TARGET(0, 0, 0);
+const Vec3 TARGET(0, 1, 0);
 
 const scene_t Scenes[]
 {
@@ -109,7 +109,7 @@ void update_ViewMatrix(Camera camera, Mat4 perspective_mat, IShader* shader_mode
 //正交相机
 float cameraWidth = 3.0;
 float cameraHeight = 3.0;
-float cameraFarPlane = 100.0;
+float cameraFarPlane = 10000.0;//是正值，因为算法中相似三角形是Xp/Xe = -near/Ze，Xp和Xe同边，而Ze是负的
 float cameraNearPlane = 0.1;//大于0.5的box半径，导致画不出来天空盒
 
 int main() 
@@ -143,7 +143,7 @@ int main()
     IShader* shader_model;//out参数 = new PhongShader();
     IShader* shader_skybox;//out参数 里面赋值了 new SkyboxShader()
     int model_num = 0;//out参数
-    Scenes[3].Build_scene(models, model_num, &shader_model, &shader_skybox);
+    Scenes[4].Build_scene(models, model_num, &shader_model, &shader_skybox);
     shader_model->payload.MVP_uniform = MVP;
     shader_model->payload.camera = &camera;//传入的是指针，所以下面循环中camera的位置变的时候，指针指向的eye值也会变
 
@@ -199,6 +199,11 @@ int main()
             num_frames = 0;
             print_time = curr_time;
         }
+
+        // reset mouse information
+        window->mouse_info.wheel_delta = 0;//一帧结束归零，不然会一直向前滚动或向后
+        window->mouse_info.orbit_delta = Vec2(0, 0);
+        window->mouse_info.fv_delta = Vec2(0, 0);
 
         // send framebuffer to window 
         window_draw(framebuffer);

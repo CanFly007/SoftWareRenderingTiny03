@@ -8,7 +8,7 @@
 #include "../shader/Shader.h"
 
 
-Model::Model(const char* filename, bool isSkyboxModel) :isSkyboxModel(isSkyboxModel)
+Model::Model(const char* filename, bool isSkyboxModel, bool isUVYFlip) :isSkyboxModel(isSkyboxModel)
 {
 	std::ifstream in;
 	in.open(filename, std::ifstream::in);
@@ -37,6 +37,10 @@ Model::Model(const char* filename, bool isSkyboxModel) :isSkyboxModel(isSkyboxMo
 			Vec2 vt;
 			for (int i = 0; i < 2; i++)//.obj文件中vt后面有多个空格，没关系
 				iss >> vt[i];
+
+			if (isUVYFlip)//他提供的很多模型的UV要颠倒
+				vt.v = 1 - vt.v;
+
 			uvVector.push_back(vt);//uvs表示每一行vt的集合
 		}
 		else if (line.compare(0, 3, "vn ") == 0)

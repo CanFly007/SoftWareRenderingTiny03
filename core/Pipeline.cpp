@@ -6,10 +6,17 @@ static int IsBackFacing(Vec3 NDCPos[3])
     Vec3 a = NDCPos[0];
     Vec3 b = NDCPos[1];
     Vec3 c = NDCPos[2];
-    float signed_area = a.x * b.y - a.y * b.x +
-        b.x * c.y - b.y * c.x +
-        c.x * a.y - c.y * a.x;   //|AB AC|
-    return signed_area <= 0;
+    //ab和ac向量的叉积，在和(0,0,1)作点积。因为在NDC空间是左手坐标系，所以(0,0,1)可以看作是摄像机的朝向
+    //因为之后要与(0,0,1)点积，所以叉积的结果只有第三个值有意义
+    float isBack = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    return isBack >= 0;//大于说明是abc是顺时针排序的（NDC在左手坐标系） 小于说明abc是逆时针排序的
+    //Vec3 ab = b - a;
+    //Vec3 ac = c - a;
+
+    //float signed_area = a.x * b.y - a.y * b.x +
+    //    b.x * c.y - b.y * c.x +
+    //    c.x * a.y - c.y * a.x;   //|AB AC|
+    //return signed_area <= 0;
 }
 
 static Vec3 Compute_Barycentric2D(Vec3* screenCoordArray,Vec2 P)
@@ -162,19 +169,19 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
     bool isSkybox = shader.payload.model->isSkyboxModel;
     for (int i = 0; i < 3; i++)
     {
-        screenSpacePosArray[i].x = (ndcPosArray[i].x + 1.0) * 0.5 * width;
-        screenSpacePosArray[i].y = (ndcPosArray[i].y + 1.0) * 0.5 * height;
+        screenSpacePosArray[i].x = (ndcPosArray[i].x + 1.0) * 0.5 * (width - 1);//[-1, 1] -> [0, width-1]
+        screenSpacePosArray[i].y = (ndcPosArray[i].y + 1.0) * 0.5 * (height - 1);
         screenSpacePosArray[i].z = ndcPosArray[i].z;
         if (isSkybox)//skybox主要算法就在这？将z置于无限远的地方
             screenSpacePosArray[i].z = 1000;//如果是天空盒，深度不用NDC中的z，直接覆盖成1000表示无限远
     }
 
     //背面裁剪，通过三个点是否是逆时针，天空盒不能背面裁剪
-    if (!isSkybox)
-    {
-        if (IsBackFacing(ndcPosArray))
-            return;
-    }
+    //if (!isSkybox)
+    //{
+    //    if (IsBackFacing(ndcPosArray))
+    //        return;
+    //}
 
     //通过重心坐标法，找到AABB矩形中要渲染的像素
     unsigned char c[3];
@@ -198,7 +205,7 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
     {
         for (int j = boxMin.y; j <= boxMax.y; j++)
         {
-            Vec2 curPixel = Vec2(i, j);
+            Vec2 curPixel = Vec2(i + 0.5, j + 0.5);
             barCoord = Compute_Barycentric2D(screenSpacePosArray, curPixel);
             if (barCoord.x < 0 || barCoord.y < 0 || barCoord.z < 0)
                 continue;
@@ -243,7 +250,7 @@ static bool IsInsidePlane(ClipPlane clipPlane, Vec4 clipSpacePos)
     switch (clipPlane)
     {
     case W_PLANE:
-        return true;// clipSpacePos.w >= EPSILON;//防止除以0，增加一个w平面的裁剪，比0.001大即可表示在w平面内
+        return clipSpacePos.w >= EPSILON;//防止除以0，增加一个w平面的裁剪，比0.001大即可表示在w平面内
     case X_LEFT:
         return clipSpacePos.x >= -clipSpacePos.w;
     case X_RIGHT:
@@ -321,6 +328,7 @@ static int ClipWithPlane(ClipPlane clipPlane, int num_vertex, payload_t& payload
             payload.outClipSpacePos[out_num_vertex] = Vec4_lerp(start_ClipSpacePos, end_ClipSpacePos, t);
             payload.outWorldSpacePos[out_num_vertex] = Vec3_lerp(inWorldSpacePos[startIndex], inWorldSpacePos[endIndex], t);
             out_num_vertex++;
+            //std::cout << clipPlane << std::endl;
         }
     }
     return out_num_vertex;
@@ -357,16 +365,16 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
 
     //homogeneous clipping 齐次裁剪（在ClipSpace中进行，即透视除法变到NDC之前）
     //和每个裁剪平面裁剪后，可能返回0个点，3个点或4个点
-    int num_vertex = HomogeneousClipping(shader.payload);
+    //int num_vertex = HomogeneousClipping(shader.payload);
 
     //用上面经过齐次裁剪后得到的新顶点，重新画三角形
-    for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
+    //for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
     {
         int index0 = 0;//注意新三角形的首位置永远是0
-        int index1 = i + 1;
-        int index2 = i + 2;
+        //int index1 = i + 1;
+        //int index2 = i + 2;
         //重新装配齐次裁剪后的顶点属性，比如如果和裁剪面有交点，那么要算交点的属性传到新的三角形中
-        IntersectAssembly(shader.payload, index0, index1, index2);
+        //IntersectAssembly(shader.payload, index0, index1, index2);
 
         Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
     }
