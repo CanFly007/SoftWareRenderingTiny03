@@ -61,7 +61,7 @@ void Build_fuhua_scene(Model** model, int& m, IShader** shader_use, IShader** sh
 
 	for (int i = 0; i < m; i++)
 	{
-		model[i] = new Model(modelname[i]);
+		model[i] = new Model(modelname[i], false, true);
 	}
 
 	printf("scene name:%s\n", "fuhua");
@@ -83,7 +83,7 @@ void Build_qiyana_scene(Model** model, int& m, IShader** shader_use, IShader** s
 
 	for (int i = 0; i < m; i++)
 	{
-		model[i] = new Model(modelname[i]);
+		model[i] = new Model(modelname[i], false, true);
 	}
 
 	printf("scene name:%s\n", "qiyana");
@@ -108,7 +108,7 @@ void Build_elfgirl_scene(Model** model, int& m, IShader** shader_use, IShader** 
 
 	for (int i = 0; i < m; i++)
 	{
-		model[i] = new Model(modelname[i]);
+		model[i] = new Model(modelname[i], false, true);
 	}
 
 	printf("scene name:%s\n", "qiyana");
@@ -128,12 +128,8 @@ void Build_gun_scene(Model** model, int& m, IShader** shader_use, IShader** shad
 	SkyboxShader* shader_sky = new SkyboxShader();
 	*shader_skybox = shader_sky;
 
-	model[0] = new Model(modelname[0]);
+	model[0] = new Model(modelname[0], false, false);
 	model[1] = new Model(modelname[1], true);
-	//for (int i = 0; i < m; i++)
-	//{
-	//	model[i] = new Model(modelname[i]);
-	//}
 
 	LoadIBLMap(shader_PBR->payload, "obj/common2");
 

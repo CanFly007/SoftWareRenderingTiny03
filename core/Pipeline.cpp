@@ -213,7 +213,10 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
             int index = j * WINDOW_WIDTH + i;//i和j要换个位置，不然深度测试时候会出错。比如如果换之前像素(366,2)和像素(365,602)是同一个index
             //直接插值屏幕空间的深度是不对的，需要透视矫正插值，在ViewSpace下插值深度Z
             //ClipSpace下w的值就是ViewSpace下-Zeye的值，取反就得到Zeye
-            float z = 1.0 / (barCoord[0] / -clipSpacePos_varying[0].w + barCoord[1] / -clipSpacePos_varying[1].w + barCoord[2] / -clipSpacePos_varying[2].w);
+            float zt = 1.0 / (barCoord[0] / -clipSpacePos_varying[0].w + barCoord[1] / -clipSpacePos_varying[1].w + barCoord[2] / -clipSpacePos_varying[2].w);
+            float z = (barCoord[0] * screenSpacePosArray[0].z / -clipSpacePos_varying[0].w +
+                barCoord[1] * screenSpacePosArray[1].z / -clipSpacePos_varying[1].w +
+                barCoord[2] * screenSpacePosArray[2].z / -clipSpacePos_varying[2].w) * zt;//screenSpacePos.z也是顶点属性，不能直接用viewSpace下的Zeye值
             //下面应该是用正交摄像机插值吧，不需要透视矫正插值
             //float z = barCoord[0] * screenSpacePosArray[0].z + barCoord[1] * screenSpacePosArray[1].z + barCoord[2] * screenSpacePosArray[2].z;
             //深度测试
