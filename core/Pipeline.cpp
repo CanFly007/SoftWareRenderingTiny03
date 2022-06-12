@@ -9,7 +9,7 @@ static int IsBackFacing(Vec3 NDCPos[3])
     //ab和ac向量的叉积，在和(0,0,1)作点积。因为在NDC空间是左手坐标系，所以(0,0,1)可以看作是摄像机的朝向
     //因为之后要与(0,0,1)点积，所以叉积的结果只有第三个值有意义
     float isBack = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-    return isBack >= 0;//大于说明是abc是顺时针排序的（NDC在左手坐标系） 小于说明abc是逆时针排序的
+    return isBack <= 0;//大于说明是abc是顺时针排序的（NDC在左手坐标系） 小于说明abc是逆时针排序的
     //Vec3 ab = b - a;
     //Vec3 ac = c - a;
 
@@ -177,11 +177,11 @@ void Rasterize_singlethread(Vec4* clipSpacePos_varying, unsigned char* framebuff
     }
 
     //背面裁剪，通过三个点是否是逆时针，天空盒不能背面裁剪
-    //if (!isSkybox)
-    //{
-    //    if (IsBackFacing(ndcPosArray))
-    //        return;
-    //}
+    if (!isSkybox)
+    {
+        if (IsBackFacing(ndcPosArray))
+            return;
+    }
 
     //通过重心坐标法，找到AABB矩形中要渲染的像素
     unsigned char c[3];
@@ -368,16 +368,16 @@ void Draw_Triangles(unsigned char* framebuffer, float* zBuffer, IShader& shader,
 
     //homogeneous clipping 齐次裁剪（在ClipSpace中进行，即透视除法变到NDC之前）
     //和每个裁剪平面裁剪后，可能返回0个点，3个点或4个点
-    //int num_vertex = HomogeneousClipping(shader.payload);
+    int num_vertex = HomogeneousClipping(shader.payload);
 
     //用上面经过齐次裁剪后得到的新顶点，重新画三角形
-    //for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
+    for (int i = 0; i < num_vertex - 2; i++)//3个点循环1次 4个点循环2次 5个点循环3次有3个三角形，以此类推
     {
         int index0 = 0;//注意新三角形的首位置永远是0
-        //int index1 = i + 1;
-        //int index2 = i + 2;
+        int index1 = i + 1;
+        int index2 = i + 2;
         //重新装配齐次裁剪后的顶点属性，比如如果和裁剪面有交点，那么要算交点的属性传到新的三角形中
-        //IntersectAssembly(shader.payload, index0, index1, index2);
+        IntersectAssembly(shader.payload, index0, index1, index2);
 
         Rasterize_singlethread(shader.payload.clipSpacePos_varying, framebuffer, zBuffer, shader);
     }
